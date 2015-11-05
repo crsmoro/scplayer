@@ -1,0 +1,15 @@
+<button id="btnInfoPlay">Playing?</button>
+
+<script type="text/javascript">
+var exampleSocket = new WebSocket("ws://localhost:8080");
+exampleSocket.onmessage = function(event) {
+	console.log(event.data);
+}
+exampleSocket.onopen = function (event) {
+	exampleSocket.send("Here's some text that the server is urgently awaiting!"); 
+};
+$('#btnInfoPlay').on('click', function(e) {
+	e.preventDefault();
+	exampleSocket.send("playing");
+});
+</script>
