@@ -200,7 +200,8 @@ public class AudioPlayer implements AudioListener {
         FloatControl volumeControl = (FloatControl) audioLine.getControl(FloatControl.Type.MASTER_GAIN);
         float maxDb = volumeControl.getMaximum();
         log.debug("maxDb : " + maxDb);
-        float minDb = volumeControl.getMinimum();
+        float minDbOrig = volumeControl.getMinimum();
+        float minDb = minDbOrig + ((maxDb - minDbOrig)/3);
         log.debug("minDb : " + minDb);
         float newVolume = 0;
 
@@ -214,7 +215,7 @@ public class AudioPlayer implements AudioListener {
 
         if (volume == 0) {
             log.debug("volume 0, setting max");
-            newVolume = -0.01f;
+            newVolume = minDbOrig;
         }
 
         log.debug("newVolume : " + newVolume);
