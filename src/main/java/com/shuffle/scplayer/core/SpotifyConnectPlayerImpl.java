@@ -568,4 +568,9 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     public void removePlayerListener(PlayerListener playerListener) {
         playerListeners.remove(playerListener);
     }
+
+    @Override
+    public AudioListener getAudioListener() {
+        return audioListener;
+    }
 }
