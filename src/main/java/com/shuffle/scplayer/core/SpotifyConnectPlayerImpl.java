@@ -31,6 +31,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private static SpConnectionCallbacks spConnectionCallbacks;
     private final transient Gson gson = new GsonBuilder().create();
     private String username;
+    private String blob;
     private String deviceId = UUID.randomUUID().toString();
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private AudioListener audioListener;
@@ -38,30 +39,20 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private final SpotifyLibrary spotifyLib;
 
     private static SpotifyConnectPlayer instance;
-    private String playerName;
+    private String playerName = "SCPlayer";
     private boolean threadPumpEventsStop = false;
+    
+    private final File credentials = new File("./credentials.json");
 
-    @SuppressWarnings("unused")
-    public SpotifyConnectPlayerImpl() throws FileNotFoundException {
-        this(new FileInputStream(new File("spotify_appkey.key")), "spotify_embedded_shared", "SCPlayer");
+    public SpotifyConnectPlayerImpl() {
+        this(new File("./spotify_appkey.key"), "spotify_embedded_shared");
     }
 
-    public SpotifyConnectPlayerImpl(File appKey, String playerName) throws FileNotFoundException {
-        this(new FileInputStream(appKey), "spotify_embedded_shared", playerName);
+    public SpotifyConnectPlayerImpl(File appKey) {
+        this(appKey, "spotify_embedded_shared");
     }
 
-    public SpotifyConnectPlayerImpl(File appKey, String playerName, String username, String password, File credentials) throws IOException {
-        this(appKey, playerName);
-        activateCredentialFile(credentials);
-        login(username, password);
-    }
-
-    public SpotifyConnectPlayerImpl(File appKey, String playerName, File credentials) throws IOException {
-        this(appKey, playerName);
-        activateCredentialFile(credentials);
-    }
-
-    public SpotifyConnectPlayerImpl(InputStream appKey, String libraryName, String playerName) throws IllegalArgumentException {
+    public SpotifyConnectPlayerImpl(File appKey, String libraryName) throws IllegalArgumentException {
         try {
             if (instance != null) {
                 log.warn("Already Initialized");
@@ -69,10 +60,8 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             }
 
             //noinspection unused
-            NativeLibrary jnaNativeLibrary = NativeLibrary.getInstance(new File(libraryName).getAbsolutePath());
+            NativeLibrary jnaNativeLibrary = NativeLibrary.getInstance(libraryName);
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
-
-            this.playerName = playerName;
 
 
             log.info("init");
@@ -81,12 +70,11 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 throw new Exception("No sound cards Avaliables");
             }
 
-            byte[] appKeyByte = IOUtils.toByteArray(appKey);
+            byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
+            
+            verifyCredentialFile(credentials);
 
-            Pointer pointerVazio = new Memory(1048576L);
-            Pointer pointerAppKey = NativeUtils.pointerFrom(appKeyByte);
-
-            spConfig = initSPConfig(appKeyByte, pointerVazio, pointerAppKey);
+            spConfig = initSPConfig(appKeyByte);
 
             audioListener = new AudioPlayer(this);
 
@@ -102,6 +90,25 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                             playerListener.onLoggedOut();
                         }
                     }
+                }
+            };
+            spConnectionCallbacks.new_credentials = new SpConnectionCallbacks.new_credentials_callback() {
+                public void apply(Pointer blob, Pointer userdata) {
+                    log.info("new_credentials_callback");
+                    log.debug("blob : " + blob.getString(0));
+                    JsonObject credentialsJson = new JsonObject();
+                    credentialsJson.addProperty("username", username);
+                    credentialsJson.addProperty("blob", blob.getString(0));
+                    credentialsJson.addProperty("playerName", getPlayerName());
+                    credentialsJson.addProperty("deviceId", deviceId);
+                    try {
+                        FileWriter fileWriter = new FileWriter(credentials);
+                        fileWriter.write(gson.toJson(credentialsJson));
+                        fileWriter.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                 }
             };
             spotifyLib.SpRegisterConnectionCallbacks(spConnectionCallbacks, null);
@@ -125,7 +132,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
             spotifyLib.SpPlaybackSetBitrate(SpBitrate.kSpBitrate320k);
 
-
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
                 @Override
@@ -133,6 +139,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     close();
                 }
             }));
+            
+            if (username != null && !"".equalsIgnoreCase(username) && blob != null && !"".equalsIgnoreCase(blob)) {
+                spotifyLib.SpConnectionLoginBlob(username, blob);
+            }
 
             instance = this;
 
@@ -151,12 +161,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onPlay();
                     }
-                    audioListener.onPlay();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPause) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onPause();
                     }
-                    audioListener.onPause();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyTrackChanged) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onTrackChanged(getPlayingTrack());
@@ -194,7 +202,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onInactive();
                     }
-                    audioListener.onInactive();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPlayTokenLost) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onTokenLost();
@@ -247,11 +254,14 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         spotifyLib.SpRegisterDebugCallbacks(spDebugCallbacks, null);
     }
 
-    private SpConfig initSPConfig(byte[] appKeyByte, Pointer pointerVazio, Pointer pointerAppKey) {
+    private SpConfig initSPConfig(byte[] appKeyByte) {
         SpConfig.ByReference spConfig = new SpConfig.ByReference();
         spConfig.version = 4;
+        
+        Pointer pointerBlank = new Memory(1048576L);
+        Pointer pointerAppKey = NativeUtils.pointerFrom(appKeyByte);
 
-        spConfig.buffer = pointerVazio;
+        spConfig.buffer = pointerBlank;
         spConfig.buffer_size = new NativeLong(1048576, true);
         spConfig.app_key = pointerAppKey;
         spConfig.app_key_size = new NativeLong(appKeyByte.length, true);
@@ -269,11 +279,17 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         return spConfig;
     }
 
-    private void activateCredentialFile(final File credentials) throws IOException, IllegalArgumentException {
-        String blob = null;
+    private void verifyCredentialFile(File credentials) throws IOException, IllegalArgumentException {
         if (!credentials.exists()) {
             log.debug("Credentials file not exists");
-            throw new IOException("Credentials file not exists");
+            try
+			{
+				credentials.createNewFile();
+			}
+			catch (SecurityException e)
+			{
+				log.error("Error trying to write credentials file", e);
+			}
         }
         try {
             log.debug("Reading credentials JSON file");
@@ -298,31 +314,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         } catch (JsonParseException e) {
             log.error("Invalid credentials file", e);
         }
-
-        if (username != null && !"".equalsIgnoreCase(username) && blob != null && !"".equalsIgnoreCase(blob)) {
-            spotifyLib.SpConnectionLoginBlob(username, blob);
-        } else {
-            throw new IllegalArgumentException("Unable to login through credentials-File");
-        }
-        spConnectionCallbacks.new_credentials = new SpConnectionCallbacks.new_credentials_callback() {
-            public void apply(Pointer blob, Pointer userdata) {
-                log.info("new_credentials_callback");
-                log.debug("blob : " + blob.getString(0));
-                JsonObject credentialsJson = new JsonObject();
-                credentialsJson.addProperty("username", username);
-                credentialsJson.addProperty("blob", blob.getString(0));
-                credentialsJson.addProperty("playerName", getPlayerName());
-                credentialsJson.addProperty("deviceId", deviceId);
-                try {
-                    FileWriter fileWriter = new FileWriter(credentials);
-                    fileWriter.write(gson.toJson(credentialsJson));
-                    fileWriter.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        };
     }
 
     @Override
