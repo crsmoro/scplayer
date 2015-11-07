@@ -17,6 +17,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author crsmoro
@@ -36,6 +38,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private AudioListener audioListener;
 
+    private final Lock libLock =  new ReentrantLock();
     private final SpotifyLibrary spotifyLib;
 
     private static SpotifyConnectPlayer instance;
@@ -122,6 +125,11 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     try {
                         while (!threadPumpEventsStop) {
                             spotifyLib.SpPumpEvents();
+                            try {
+                                Thread.sleep(300);
+                            } catch (InterruptedException ignored) {
+
+                            }
                         }
                     } catch (Exception e) {
                         log.error("PumpEvents thread error", e);
@@ -133,7 +141,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             spotifyLib.SpPlaybackSetBitrate(SpBitrate.kSpBitrate320k);
 
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
                 @Override
                 public void run() {
                     close();
@@ -319,7 +326,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     @Override
     public Track getPlayingTrack() {
         SpMetadata spMetadata = new SpMetadata.ByReference();
-        int retMetadata = spotifyLib.SpGetMetadata(spMetadata, 0);
+        int retMetadata;
+        try {
+            libLock.lock();
+            retMetadata = spotifyLib.SpGetMetadata(spMetadata, 0);
+        } finally {
+            libLock.unlock();
+        }
         if (retMetadata == SpError.kSpErrorOk) {
             Track track = new Track();
             try {
@@ -341,22 +354,37 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
     @Override
     public boolean getShuffle() {
-        return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsShuffled());
+        try {
+            libLock.lock();
+            return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsShuffled());
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public boolean getRepeat() {
-        return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsRepeated());
+        try {
+            libLock.lock();
+            return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsRepeated());
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public short getVolume() {
-        return spotifyLib.SpPlaybackGetVolume();
+        try {
+            libLock.lock();
+            return spotifyLib.SpPlaybackGetVolume();
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public int getSeek() {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
@@ -365,7 +393,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         if (playingTrack != null) {
             ByteBuffer url = ByteBuffer.allocate(512);
             NativeSize nativeSize = new NativeSize(url.array().length);
-            spotifyLib.SpGetMetadataImageURL(playingTrack.getCoverUri(), SpImageSize.kSpImageSizeSmall, url, nativeSize);
+            try {
+                libLock.lock();
+                spotifyLib.SpGetMetadataImageURL(playingTrack.getCoverUri(),
+                        SpImageSize.kSpImageSizeSmall, url, nativeSize);
+            } finally {
+                libLock.unlock();
+            }
             return new String(url.array());
         } else {
             return "";
@@ -374,7 +408,12 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
     @Override
     public boolean isPlaying() {
-        return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsPlaying());
+        try {
+            libLock.lock();
+            return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsPlaying());
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
@@ -385,73 +424,138 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     @Override
     public void setPlayerName(String playerName) {
         spConfig.remoteName = NativeUtils.pointerFrom(playerName);
-        spotifyLib.SpSetDisplayName(playerName);
+        try {
+            libLock.lock();
+            spotifyLib.SpSetDisplayName(playerName);
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void play() {
-        spotifyLib.SpPlaybackPlay();
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackPlay();
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void pause() {
-        spotifyLib.SpPlaybackPause();
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackPause();
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void prev() {
-        spotifyLib.SpPlaybackSkipToPrev();
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackSkipToPrev();
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void next() {
-        spotifyLib.SpPlaybackSkipToNext();
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackSkipToNext();
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void seek(int millis) {
-        spotifyLib.SpPlaybackSeek(millis);
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackSeek(millis);
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void shuffle(boolean enabled) {
-        spotifyLib.SpPlaybackEnableShuffle(NativeUtils.fromBoolean(enabled));
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackEnableShuffle(NativeUtils.fromBoolean(enabled));
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void repeat(boolean enabled) {
-        spotifyLib.SpPlaybackEnableRepeat(NativeUtils.fromBoolean(enabled));
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackEnableRepeat(NativeUtils.fromBoolean(enabled));
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void volume(short volume) {
-        spotifyLib.SpPlaybackUpdateVolume(volume);
+        try {
+            libLock.lock();
+            spotifyLib.SpPlaybackUpdateVolume(volume);
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void login(String username, String password) {
         this.username = username;
-        spotifyLib.SpConnectionLoginPassword(username, password);
+        try {
+            libLock.lock();
+            spotifyLib.SpConnectionLoginPassword(username, password);
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void logout() {
-        spotifyLib.SpConnectionLogout();
+        try {
+            libLock.lock();
+            spotifyLib.SpConnectionLogout();
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public boolean isLoggedIn() {
-        return NativeUtils.toBoolean(spotifyLib.SpConnectionIsLoggedIn());
+        try {
+            libLock.lock();
+            return NativeUtils.toBoolean(spotifyLib.SpConnectionIsLoggedIn());
+        } finally {
+            libLock.unlock();
+        }
     }
 
     @Override
     public void close() {
         threadPumpEventsStop = true;
-        if (NativeUtils.toBoolean(spotifyLib.SpPlaybackIsPlaying())) {
-            spotifyLib.SpPlaybackPause();
+        try {
+            libLock.lock();
+            if (NativeUtils.toBoolean(spotifyLib.SpPlaybackIsPlaying())) {
+                spotifyLib.SpPlaybackPause();
+            }
+            spotifyLib.SpConnectionLogout();
+            spotifyLib.SpFree();
+        } finally {
+            libLock.unlock();
         }
-        spotifyLib.SpConnectionLogout();
-        spotifyLib.SpFree();
         audioListener.close();
     }
 
