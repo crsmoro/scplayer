@@ -34,7 +34,7 @@ public class AudioPlayer implements AudioListener {
     private AtomicBoolean play = new AtomicBoolean(true);
     private boolean isMuted = false;
 
-    public AudioPlayer(SpotifyConnectPlayer player) throws LineUnavailableException, IOException {
+    public AudioPlayer(final SpotifyConnectPlayer player) throws LineUnavailableException, IOException {
         this.player = player;
 
         Thread playing = new Thread(new Runnable() {
@@ -65,8 +65,9 @@ public class AudioPlayer implements AudioListener {
                             numbytes += bytesread;
 
                             if (!audioLine.isOpen()) {
-                                //there may be something wrong. we need to empty the buffer
                                 numbytes = 0;
+                                if (!player.isActive())
+                                    onInactive();
                                 continue;
                             }
 

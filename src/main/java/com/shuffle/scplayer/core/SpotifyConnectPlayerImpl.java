@@ -121,7 +121,12 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 public void run() {
                     try {
                         while (!threadPumpEventsStop) {
-                            spotifyLib.SpPumpEvents();
+                            try {
+                                libLock.lock();
+                                spotifyLib.SpPumpEvents();
+                            } finally {
+                                libLock.unlock();
+                            }
                             try {
                                 Thread.sleep(100);
                             } catch (InterruptedException ignored) {
@@ -206,6 +211,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onInactive();
                     }
+                    audioListener.onInactive();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPlayTokenLost) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onTokenLost();
@@ -535,6 +541,16 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         try {
             libLock.lock();
             return NativeUtils.toBoolean(spotifyLib.SpConnectionIsLoggedIn());
+        } finally {
+            libLock.unlock();
+        }
+    }
+
+    @Override
+    public boolean isActive() {
+        try {
+            libLock.lock();
+            return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsActiveDevice());
         } finally {
             libLock.unlock();
         }
