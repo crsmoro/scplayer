@@ -225,6 +225,7 @@ public class AudioPlayer implements AudioListener {
     @Override
     public void close() {
         stopPlayThread = true;
-        audioLine.close();
+        if (audioLine != null)
+            audioLine.close();
     }
 }
