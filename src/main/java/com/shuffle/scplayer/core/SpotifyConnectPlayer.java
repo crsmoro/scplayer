@@ -46,6 +46,8 @@ public interface SpotifyConnectPlayer {
 
     boolean isLoggedIn();
 
+    boolean isActive();
+
     void close();
 
     void addPlayerListener(PlayerListener playerListener);
