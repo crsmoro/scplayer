@@ -63,7 +63,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
 
-
             log.info("init");
             if (AudioSystem.getMixerInfo().length <= 0) {
                 log.error("No sound cards Avaliables");
