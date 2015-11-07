@@ -31,86 +31,66 @@ public class PlayerWebServerIntegration implements PlayerListener {
                 try
                 {
                     WebSocketObject webSocketObject = gson.fromJson(message, WebSocketObject.class);
-                    if (webSocketObject.getAction().equals("play"))
-                    {
-                        spotifyConnectPlayer.play();
-                    }
-                    else if (webSocketObject.getAction().equals("pause"))
-                    {
-                        spotifyConnectPlayer.pause();
-                    }
-                    else if (webSocketObject.getAction().equals("pause"))
-                    {
-                        spotifyConnectPlayer.pause();
-                    }
-                    else if (webSocketObject.getAction().equals("prev"))
-                    {
-                        spotifyConnectPlayer.prev();
-                    }
-                    else if (webSocketObject.getAction().equals("next"))
-                    {
-                        spotifyConnectPlayer.next();
-                    }
-                    else if (webSocketObject.getAction().equals("seek"))
-                    {
-                        spotifyConnectPlayer.seek(((Double)webSocketObject.getData()).intValue());
-                    }
-                    else if (webSocketObject.getAction().equals("shuffle"))
-                    {
-                        spotifyConnectPlayer.shuffle((boolean)webSocketObject.getData());
-                    }
-                    else if (webSocketObject.getAction().equals("repeat"))
-                    {
-                        spotifyConnectPlayer.repeat((boolean)webSocketObject.getData());
-                    }
-                    else if (webSocketObject.getAction().equals("volume"))
-                    {
-                        spotifyConnectPlayer.volume((short)webSocketObject.getData());
-                    }
-                    else if (webSocketObject.getAction().equals("playername"))
-                    {
-                        spotifyConnectPlayer.setPlayerName((String)webSocketObject.getData());
-                        webSocket.send(gson.toJson(new WebSocketObject("playername", spotifyConnectPlayer.getPlayerName())).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("login"))
-                    {
-                        @SuppressWarnings("unchecked")
-                        Map<String, String> mapLogin = (Map<String, String>) webSocketObject.getData();
-                        spotifyConnectPlayer.login(mapLogin.get("username"), mapLogin.get("password"));
-                    }
-                    else if (webSocketObject.getAction().equals("logout"))
-                    {
-                        spotifyConnectPlayer.logout();
-                    }
-                    else if (webSocketObject.getAction().equals("track"))
-                    {
-                        Track track = spotifyConnectPlayer.getPlayingTrack();
-                        WebSocketObject webSocketReturnObject = new WebSocketObject("track", track);
-                        webSocket.send(gson.toJson(webSocketReturnObject).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("getShuffle"))
-                    {
-                        webSocket.send(gson.toJson(new WebSocketObject("shuffle", spotifyConnectPlayer.getShuffle())).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("getRepeat"))
-                    {
-                        webSocket.send(gson.toJson(new WebSocketObject("repeat", spotifyConnectPlayer.getRepeat())).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("isPlaying"))
-                    {
-                        webSocket.send(gson.toJson(new WebSocketObject("playing", spotifyConnectPlayer.isPlaying())).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("isLoggedIn"))
-                    {
-                        webSocket.send(gson.toJson(new WebSocketObject("logged", spotifyConnectPlayer.isLoggedIn())).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("getAlbumCover"))
-                    {
-                        webSocket.send(gson.toJson(new WebSocketObject("albumcover", spotifyConnectPlayer.getAlbumCoverURL())).getBytes("UTF-8"));
-                    }
-                    else if (webSocketObject.getAction().equals("getPlayerName"))
-                    {
-                        webSocket.send(gson.toJson(new WebSocketObject("playername", spotifyConnectPlayer.getPlayerName())).getBytes("UTF-8"));
+                    switch (webSocketObject.getAction()) {
+                        case "play":
+                            spotifyConnectPlayer.play();
+                            break;
+                        case "pause":
+                            spotifyConnectPlayer.pause();
+                            break;
+                        case "prev":
+                            spotifyConnectPlayer.prev();
+                            break;
+                        case "next":
+                            spotifyConnectPlayer.next();
+                            break;
+                        case "seek":
+                            spotifyConnectPlayer.seek(((Double) webSocketObject.getData()).intValue());
+                            break;
+                        case "shuffle":
+                            spotifyConnectPlayer.shuffle((boolean) webSocketObject.getData());
+                            break;
+                        case "repeat":
+                            spotifyConnectPlayer.repeat((boolean) webSocketObject.getData());
+                            break;
+                        case "volume":
+                            spotifyConnectPlayer.volume((short) webSocketObject.getData());
+                            break;
+                        case "playername":
+                            spotifyConnectPlayer.setPlayerName((String) webSocketObject.getData());
+                            webSocket.send(gson.toJson(new WebSocketObject("playername", spotifyConnectPlayer.getPlayerName())).getBytes("UTF-8"));
+                            break;
+                        case "login":
+                            @SuppressWarnings("unchecked")
+                            Map<String, String> mapLogin = (Map<String, String>) webSocketObject.getData();
+                            spotifyConnectPlayer.login(mapLogin.get("username"), mapLogin.get("password"));
+                            break;
+                        case "logout":
+                            spotifyConnectPlayer.logout();
+                            break;
+                        case "track":
+                            Track track = spotifyConnectPlayer.getPlayingTrack();
+                            WebSocketObject webSocketReturnObject = new WebSocketObject("track", track);
+                            webSocket.send(gson.toJson(webSocketReturnObject).getBytes("UTF-8"));
+                            break;
+                        case "getShuffle":
+                            webSocket.send(gson.toJson(new WebSocketObject("shuffle", spotifyConnectPlayer.getShuffle())).getBytes("UTF-8"));
+                            break;
+                        case "getRepeat":
+                            webSocket.send(gson.toJson(new WebSocketObject("repeat", spotifyConnectPlayer.getRepeat())).getBytes("UTF-8"));
+                            break;
+                        case "isPlaying":
+                            webSocket.send(gson.toJson(new WebSocketObject("playing", spotifyConnectPlayer.isPlaying())).getBytes("UTF-8"));
+                            break;
+                        case "isLoggedIn":
+                            webSocket.send(gson.toJson(new WebSocketObject("logged", spotifyConnectPlayer.isLoggedIn())).getBytes("UTF-8"));
+                            break;
+                        case "getAlbumCover":
+                            webSocket.send(gson.toJson(new WebSocketObject("albumcover", spotifyConnectPlayer.getAlbumCoverURL())).getBytes("UTF-8"));
+                            break;
+                        case "getPlayerName":
+                            webSocket.send(gson.toJson(new WebSocketObject("playername", spotifyConnectPlayer.getPlayerName())).getBytes("UTF-8"));
+                            break;
                     }
                 }
                 catch (Exception e)
