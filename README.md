@@ -9,7 +9,7 @@ Quick run / I just want to use
 ---------------
 1 - Download Java, <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank">link here</a>
 
-2 - Get apropriate version of spotify lib, you can find all version in <a href="https://github.com/sashahilton00/spotify-connect-resources" target="_blank">this github</a>, if you dont know which one, its problably <a href="https://github.com/sashahilton00/spotify-connect-resources/raw/master/armhf%20version/libspotify_embedded_shared.so">this one</a>
+2 - Get apropriate version of spotify lib, you can find all versions in <a href="https://github.com/sashahilton00/spotify-connect-resources" target="_blank">this github</a>, if you dont know which one, its problably <a href="https://github.com/sashahilton00/spotify-connect-resources/raw/master/armhf%20version/libspotify_embedded_shared.so">this one</a>
 
 3 - Get your spotify key, <a href="https://devaccount.spotify.com/my-account/keys/" target="_blank">here</a>, download the binary version
 
@@ -26,16 +26,11 @@ Detailed Usage
 ---------------
 Java options -D&lt;option&gt;=&lt;value&gt;
 
-playerName - Set the player name, will appears on all your connect devices
-
-username - Set username
-
-password - Set password
-
-standalone - Runs wihtout the web version (true/false)
-
-debug - Set debug level - 0 > WARN, 1 > INFO, 2 > DEBUG, 3 > TRACE
-
+playerName - Set the player name, will appears on all your connect devices (Default will be SCPlayer)<br/>
+username - Set username<br/>
+password - Set password<br/>
+standalone - Runs wihtout the web version (true/false)<br/>
+debug - Set debug level - 0 > WARN, 1 > INFO, 2 > DEBUG, 3 > TRACE<br/>
 appKey - Location of your spotify_appkey.key
 
 
