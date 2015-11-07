@@ -30,12 +30,12 @@ public class AudioPlayer implements AudioListener {
     final Lock lock = new ReentrantLock();
     final Condition waiting  = lock.newCondition();
     private boolean isWaiting = false;
+
     private AtomicBoolean play = new AtomicBoolean(true);
+    private boolean isMuted = false;
 
     public AudioPlayer(SpotifyConnectPlayer player) throws LineUnavailableException, IOException {
         this.player = player;
-        //audioLine = (SourceDataLine) AudioSystem.getLine(info);
-        //audioLine.open(pcm);
 
         Thread playing = new Thread(new Runnable() {
 
@@ -96,7 +96,7 @@ public class AudioPlayer implements AudioListener {
         playing.start();
     }
 
-    public void playThreadWait() {
+    private void playThreadWait() {
         lock.lock();
         try {
             isWaiting = true;
@@ -109,12 +109,37 @@ public class AudioPlayer implements AudioListener {
         }
     }
 
-    public void playThreadSignal() {
+    private void playThreadSignal() {
         lock.lock();
         try {
             waiting.signal();
         } finally {
             lock.unlock();
+        }
+    }
+
+    public void mute() {
+        if (audioLine == null) {
+            isMuted = true;
+        } else {
+            //when requesting the same line you sometimes get different features
+            isMuted = true;
+            if (!audioLine.isControlSupported(BooleanControl.Type.MUTE))
+                return;
+            BooleanControl control = (BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE);
+            control.setValue(true);
+        }
+    }
+
+    public void unMute() {
+        if (audioLine == null) {
+            isMuted = false;
+        } else {
+            isMuted = false;
+            if (!audioLine.isControlSupported(BooleanControl.Type.MUTE))
+                return;
+            BooleanControl control = (BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE);
+            control.setValue(false);
         }
     }
 
@@ -124,6 +149,8 @@ public class AudioPlayer implements AudioListener {
             audioLine = (SourceDataLine) AudioSystem.getLine(info);
             audioLine.open(pcm);
             onVolumeChanged(player.getVolume());
+            if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))
+                ((BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE)).setValue(true);
             input = new PipedInputStream(4096);
             output = new PipedOutputStream(input);
         } catch (LineUnavailableException | IOException e) {
