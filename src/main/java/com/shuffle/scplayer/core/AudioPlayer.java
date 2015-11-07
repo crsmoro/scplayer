@@ -19,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class AudioPlayer implements AudioListener {
     private static final transient Log log = LogFactory.getLog(AudioPlayer.class);
-    private final SpotifyConnectPlayer spotifyConnectPlayer;
+    private final SpotifyConnectPlayer player;
 
     private AudioFormat pcm = new AudioFormat(RATE, 16, CHANNELS, true, false);
     private DataLine.Info info = new DataLine.Info(SourceDataLine.class, pcm);
@@ -32,13 +32,10 @@ public class AudioPlayer implements AudioListener {
     private boolean isWaiting = false;
     private AtomicBoolean play = new AtomicBoolean(true);
 
-    public AudioPlayer(SpotifyConnectPlayer spotifyConnectPlayer) throws LineUnavailableException, IOException {
-        this.spotifyConnectPlayer = spotifyConnectPlayer;
+    public AudioPlayer(SpotifyConnectPlayer player) throws LineUnavailableException, IOException {
+        this.player = player;
         //audioLine = (SourceDataLine) AudioSystem.getLine(info);
         //audioLine.open(pcm);
-
-        input = new PipedInputStream(4096);
-        output = new PipedOutputStream(input);
 
         Thread playing = new Thread(new Runnable() {
 
@@ -52,34 +49,40 @@ public class AudioPlayer implements AudioListener {
 
                     boolean started = false;
                     while (!stopPlayThread) {
-                        if (!play.get()) {
-                            playThreadWait();
+                        try {
+                            if (!play.get() || input == null) {
+                                playThreadWait();
+                                continue;
+                            }
+
+                            int bytesread = input.read(buffer, numbytes, buffer.length - numbytes);
+
+                            if (bytesread == -1) {
+                                playThreadWait();
+                                continue;
+                            }
+
+                            numbytes += bytesread;
+
+                            if (!audioLine.isOpen())
+                                continue;
+
+                            if (!audioLine.isRunning()) {
+                                audioLine.start();
+                                started = true;
+                            }
+
+                            int bytestowrite = numbytes / framesize * framesize;
+
+                            audioLine.write(buffer, 0, bytestowrite);
+
+                            int remaining = numbytes - bytestowrite;
+                            if (remaining > 0)
+                                System.arraycopy(buffer, bytestowrite, buffer, 0, remaining);
+                            numbytes = remaining;
+                        } catch (Exception e) {
+                            log.error("Playing thread error", e);
                         }
-
-                        int bytesread = input.read(buffer, numbytes, buffer.length - numbytes);
-
-                        if (bytesread == -1) {
-                            playThreadWait();
-                        }
-
-                        numbytes += bytesread;
-
-                        if (!audioLine.isOpen())
-                            break;
-
-                        if (!started) {
-                            audioLine.start();
-                            started = true;
-                        }
-
-                        int bytestowrite = numbytes / framesize * framesize;
-
-                        audioLine.write(buffer, 0, bytestowrite);
-
-                        int remaining = numbytes - bytestowrite;
-                        if (remaining > 0)
-                            System.arraycopy(buffer, bytestowrite, buffer, 0, remaining);
-                        numbytes = remaining;
                     }
                     if (started) {
                         audioLine.stop();
@@ -91,7 +94,6 @@ public class AudioPlayer implements AudioListener {
             }
         });
         playing.start();
-
     }
 
     public void playThreadWait() {
@@ -121,17 +123,30 @@ public class AudioPlayer implements AudioListener {
         try {
             audioLine = (SourceDataLine) AudioSystem.getLine(info);
             audioLine.open(pcm);
-        } catch (LineUnavailableException e) {
+            onVolumeChanged(player.getVolume());
+            input = new PipedInputStream(4096);
+            output = new PipedOutputStream(input);
+        } catch (LineUnavailableException | IOException e) {
             log.error("onActive error", e);
         }
-        log.error("onActive called");
     }
 
     @Override
     public void onInactive() {
         audioLine.flush();
         audioLine.close();
-        log.error("onInactive called");
+        try {
+            output.close();
+        } catch (IOException e) {
+            log.error("unable to close output", e);
+        }
+        try {
+            PipedInputStream input = this.input;
+            this.input = null;
+            input.close();
+        } catch (IOException e) {
+            log.error("unable to input output", e);
+        }
     }
 
     @Override
@@ -139,30 +154,27 @@ public class AudioPlayer implements AudioListener {
         if (play.compareAndSet(false, true)) {
             playThreadSignal();
         }
-        log.error("onPlay called");
     }
 
     @Override
     public void onPause() {
         play.compareAndSet(true, false);
-        log.error("onPause called");
     }
 
     @Override
     public void onAudioFlush() {
         audioLine.flush();
         try {
-            input.skip(input.available());
+            if (input != null)
+                input.skip(input.available());
         } catch (IOException e) {
             log.error("error while trying to clear buffer", e);
         }
-        log.error("onAudioFlush called");
     }
 
     @Override
     public void onTokenLost() {
         onInactive();
-        log.error("onTokenLost called");
     }
 
     @Override
@@ -207,14 +219,11 @@ public class AudioPlayer implements AudioListener {
 
         log.debug("newVolume : " + newVolume);
         volumeControl.setValue(newVolume);
-
-        log.error("volume called");
     }
 
     @Override
     public void close() {
         stopPlayThread = true;
         audioLine.close();
-        log.error("close called");
     }
 }
