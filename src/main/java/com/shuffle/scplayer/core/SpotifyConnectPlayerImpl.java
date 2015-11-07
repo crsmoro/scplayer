@@ -123,7 +123,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                         while (!threadPumpEventsStop) {
                             spotifyLib.SpPumpEvents();
                             try {
-                                Thread.sleep(300);
+                                Thread.sleep(100);
                             } catch (InterruptedException ignored) {
 
                             }
