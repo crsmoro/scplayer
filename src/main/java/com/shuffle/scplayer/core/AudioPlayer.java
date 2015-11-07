@@ -190,7 +190,8 @@ public class AudioPlayer implements AudioListener {
 
     @Override
     public void onAudioFlush() {
-        audioLine.flush();
+        if (audioLine != null)
+            audioLine.flush();
         try {
             if (input != null)
                 input.skip(input.available());
