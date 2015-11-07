@@ -64,8 +64,11 @@ public class AudioPlayer implements AudioListener {
 
                             numbytes += bytesread;
 
-                            if (!audioLine.isOpen())
+                            if (!audioLine.isOpen()) {
+                                //there may be something wrong. we need to empty the buffer
+                                numbytes = 0;
                                 continue;
+                            }
 
                             if (!audioLine.isRunning()) {
                                 audioLine.start();
