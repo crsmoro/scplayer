@@ -5,8 +5,7 @@ import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.log4j.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +24,8 @@ public class SCPlayerMain {
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		
+		initLogger();
+
 		String playerName = System.getProperty("playerName", "SCPlayer");
 		String username = System.getProperty("username");
 		String password = System.getProperty("password");
@@ -37,8 +37,9 @@ public class SCPlayerMain {
             log.error("appkey is not existing");
             System.exit(-1);
         }
-		
+
 		Logger.getRootLogger().setLevel(logLevel.get(debug));
+
         File credentials = new File("/storage/credentials.json");
 
         SpotifyConnectPlayer player = null;
@@ -60,5 +61,32 @@ public class SCPlayerMain {
 		
 
 	}
+
+    private static void initLogger() {
+        //This is the root logger provided by log4j
+        Logger rootLogger = Logger.getRootLogger();
+
+        //Define log pattern layout
+        PatternLayout layout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
+
+        try
+        {
+            //Define file appender with layout and output log file name
+            RollingFileAppender fileAppender = new RollingFileAppender(layout, "/storage/scplayer.log");
+            fileAppender.setImmediateFlush(true);
+            fileAppender.setThreshold(Level.DEBUG);
+            fileAppender.setAppend(true);
+            fileAppender.setMaxFileSize("5MB");
+            fileAppender.setMaxBackupIndex(2);
+
+            //Add the appender to root logger
+            rootLogger.addAppender(fileAppender);
+        }
+        catch (IOException e)
+        {
+            System.out.println("Failed to add appender !!");
+            System.exit(-1);
+        }
+    }
 
 }

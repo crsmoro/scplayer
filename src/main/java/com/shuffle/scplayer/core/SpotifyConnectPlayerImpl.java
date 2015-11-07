@@ -42,28 +42,26 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private boolean threadPumpEventsStop = false;
 
     @SuppressWarnings("unused")
-    public SpotifyConnectPlayerImpl() {
-        this(new File("spotify_appkey.key"), "spotify_embedded_shared");
+    public SpotifyConnectPlayerImpl() throws FileNotFoundException {
+        this(new FileInputStream(new File("spotify_appkey.key")), "spotify_embedded_shared", "SCPlayer");
     }
 
-    public SpotifyConnectPlayerImpl(File appKey) {
-        this(appKey, "spotify_embedded_shared");
+    public SpotifyConnectPlayerImpl(File appKey, String playerName) throws FileNotFoundException {
+        this(new FileInputStream(appKey), "spotify_embedded_shared", playerName);
     }
 
     public SpotifyConnectPlayerImpl(File appKey, String playerName, String username, String password, File credentials) throws IOException {
-        this(appKey);
-        setPlayerName(playerName);
+        this(appKey, playerName);
         activateCredentialFile(credentials);
         login(username, password);
     }
 
     public SpotifyConnectPlayerImpl(File appKey, String playerName, File credentials) throws IOException {
-        this(appKey);
-        setPlayerName(playerName);
+        this(appKey, playerName);
         activateCredentialFile(credentials);
     }
 
-    public SpotifyConnectPlayerImpl(File appKey, String libraryName) throws IllegalArgumentException {
+    public SpotifyConnectPlayerImpl(InputStream appKey, String libraryName, String playerName) throws IllegalArgumentException {
         try {
             if (instance != null) {
                 log.warn("Already Initialized");
@@ -71,8 +69,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             }
 
             //noinspection unused
-            NativeLibrary jnaNativeLibrary = NativeLibrary.getInstance(libraryName);
+            NativeLibrary jnaNativeLibrary = NativeLibrary.getInstance(new File(libraryName).getAbsolutePath());
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
+
+            this.playerName = playerName;
 
 
             log.info("init");
@@ -81,7 +81,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 throw new Exception("No sound cards Avaliables");
             }
 
-            byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
+            byte[] appKeyByte = IOUtils.toByteArray(appKey);
 
             Pointer pointerVazio = new Memory(1048576L);
             Pointer pointerAppKey = NativeUtils.pointerFrom(appKeyByte);
@@ -151,10 +151,12 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onPlay();
                     }
+                    audioListener.onPlay();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPause) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onPause();
                     }
+                    audioListener.onPause();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyTrackChanged) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onTrackChanged(getPlayingTrack());
@@ -192,6 +194,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onInactive();
                     }
+                    audioListener.onInactive();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPlayTokenLost) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onTokenLost();

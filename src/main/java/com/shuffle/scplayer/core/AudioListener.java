@@ -14,6 +14,10 @@ public interface AudioListener {
 
     void onInactive();
 
+    void onPlay();
+
+    void onPause();
+
     void onTokenLost();
 
     void onAudioFlush();
