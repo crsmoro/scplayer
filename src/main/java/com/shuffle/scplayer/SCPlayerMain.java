@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SCPlayerMain {
-    private static final transient Log log = LogFactory.getLog(SCPlayerMain.class);
+	private static final transient Log log = LogFactory.getLog(SCPlayerMain.class);
 	public static final Map<Integer, Level> logLevel = new HashMap<Integer, Level>();
-	
+
 	static {
 		logLevel.put(0, Level.WARN);
 		logLevel.put(1, Level.INFO);
@@ -32,61 +32,54 @@ public class SCPlayerMain {
 		Boolean standalone = Boolean.getBoolean("standalone");
 		Integer debug = Integer.getInteger("debug", 0);
 		String appKeyLocation = System.getProperty("appKey", "spotify_appkey.key");
-        File appKey = new File(appKeyLocation);
-        if (!appKey.exists()) {
-            log.error("appkey is not existing");
-            System.exit(-1);
-        }
-
+		File appKey = new File(appKeyLocation);
 		Logger.getRootLogger().setLevel(logLevel.get(debug));
 
-        File credentials = new File("/storage/credentials.json");
+		if (!appKey.exists()) {
+			log.error("appkey is not existing");
+			System.exit(-1);
+		}
 
-        SpotifyConnectPlayer player = null;
+		SpotifyConnectPlayer player = new SpotifyConnectPlayerImpl(appKey);
 
 		if (playerName != null && !"".equalsIgnoreCase(playerName)) {
-            player = new SpotifyConnectPlayerImpl(appKey, playerName, credentials);
+			player.setPlayerName(playerName);
 		}
-		if (username != null && !"".equalsIgnoreCase(username) && password != null && !"".equalsIgnoreCase(password))
-		{
-            player = new SpotifyConnectPlayerImpl(appKey, playerName, username, password, credentials);
-		} else {
-            log.error("unable to create Spotify-Connect");
-            System.exit(-1);
-        }
+		if (username != null && !"".equalsIgnoreCase(username) && password != null && !"".equalsIgnoreCase(password)) {
+			player.login(username, password);
+		} else if (standalone) {
+			log.error("unable to create Spotify-Connect");
+			System.exit(-1);
+		}
 		if (!standalone) {
-            PlayerWebServerIntegration webServerIntegration = new PlayerWebServerIntegration(player);
-            player.addPlayerListener(webServerIntegration);
+			PlayerWebServerIntegration webServerIntegration = new PlayerWebServerIntegration(player);
+			player.addPlayerListener(webServerIntegration);
 		}
-		
 
 	}
 
-    private static void initLogger() {
-        //This is the root logger provided by log4j
-        Logger rootLogger = Logger.getRootLogger();
+	private static void initLogger() {
+		// This is the root logger provided by log4j
+		Logger rootLogger = Logger.getRootLogger();
 
-        //Define log pattern layout
-        PatternLayout layout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
+		// Define log pattern layout
+		PatternLayout layout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
 
-        try
-        {
-            //Define file appender with layout and output log file name
-            RollingFileAppender fileAppender = new RollingFileAppender(layout, "/storage/scplayer.log");
-            fileAppender.setImmediateFlush(true);
-            fileAppender.setThreshold(Level.DEBUG);
-            fileAppender.setAppend(true);
-            fileAppender.setMaxFileSize("5MB");
-            fileAppender.setMaxBackupIndex(2);
+		try {
+			// Define file appender with layout and output log file name
+			RollingFileAppender fileAppender = new RollingFileAppender(layout, "/storage/scplayer.log");
+			fileAppender.setImmediateFlush(true);
+			fileAppender.setThreshold(Level.DEBUG);
+			fileAppender.setAppend(true);
+			fileAppender.setMaxFileSize("5MB");
+			fileAppender.setMaxBackupIndex(2);
 
-            //Add the appender to root logger
-            rootLogger.addAppender(fileAppender);
-        }
-        catch (IOException e)
-        {
-            System.out.println("Failed to add appender !!");
-            System.exit(-1);
-        }
-    }
+			// Add the appender to root logger
+			rootLogger.addAppender(fileAppender);
+		} catch (IOException e) {
+			System.out.println("Failed to add appender !!");
+			System.exit(-1);
+		}
+	}
 
 }
