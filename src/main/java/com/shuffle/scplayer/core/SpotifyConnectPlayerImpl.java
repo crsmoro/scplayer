@@ -29,7 +29,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private static final transient Log log = LogFactory.getLog(SpotifyConnectPlayerImpl.class);
     private static SpConfig spConfig;
     private static SpPlaybackCallbacks spPlaybackCallbacks;
-    @SuppressWarnings("FieldCanBeLocal")
     private static SpConnectionCallbacks spConnectionCallbacks;
     private final transient Gson gson = new GsonBuilder().create();
     private String username;
@@ -62,8 +61,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 throw new IllegalArgumentException("Already Initialized");
             }
 
-            //noinspection unused
-            NativeLibrary jnaNativeLibrary = NativeLibrary.getInstance(libraryName);
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
 
 
