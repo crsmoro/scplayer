@@ -585,4 +585,9 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     public AudioListener getAudioListener() {
         return audioListener;
     }
+
+    @Override
+    public void setAudioListener(AudioListener audioListener) {
+        this.audioListener = audioListener;
+    }
 }

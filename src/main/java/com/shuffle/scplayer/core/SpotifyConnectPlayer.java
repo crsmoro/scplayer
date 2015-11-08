@@ -55,4 +55,6 @@ public interface SpotifyConnectPlayer {
     void removePlayerListener(PlayerListener playerListener);
 
     AudioListener getAudioListener();
+
+    void setAudioListener(AudioListener audioListener);
 }
