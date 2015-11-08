@@ -259,5 +259,11 @@ public class AudioPlayer implements AudioListener {
         stopPlayThread = true;
         if (audioLine != null)
             audioLine.close();
+        try {
+            output.close();
+            input.close();
+        } catch (IOException e) {
+            log.error(e);
+        }
     }
 }
