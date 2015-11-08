@@ -291,7 +291,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 			{
 				credentials.createNewFile();
 			}
-			catch (SecurityException e)
+			catch (SecurityException | IOException e)
 			{
 				log.error("Error trying to write credentials file", e);
 			}
@@ -398,7 +398,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             } finally {
                 libLock.unlock();
             }
-            return new String(url.array());
+            return new String(url.array()).trim();
         } else {
             return "";
         }
