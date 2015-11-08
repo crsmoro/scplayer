@@ -30,6 +30,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private static SpConfig spConfig;
     private static SpPlaybackCallbacks spPlaybackCallbacks;
     private static SpConnectionCallbacks spConnectionCallbacks;
+    private static SpDebugCallbacks spDebugCallbacks;
     private final transient Gson gson = new GsonBuilder().create();
     private String username;
     private String blob;
@@ -249,7 +250,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         };
         spotifyLib.SpRegisterPlaybackCallbacks(spPlaybackCallbacks, null);
 
-        SpDebugCallbacks spDebugCallbacks = new SpDebugCallbacks.ByReference();
+        spDebugCallbacks = new SpDebugCallbacks.ByReference();
         spDebugCallbacks.message = new SpDebugCallbacks.message_callback() {
             public void apply(Pointer msg, Pointer userdata) {
                 log.debug(msg.getString(0L));
