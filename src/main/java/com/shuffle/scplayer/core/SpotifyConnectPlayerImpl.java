@@ -37,6 +37,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private String deviceId = UUID.randomUUID().toString();
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private AudioListener audioListener;
+    private int pumpEventsDelay = 100;
 
     private final Lock libLock =  new ReentrantLock();
     private final SpotifyLibrary spotifyLib;
@@ -117,6 +118,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             registerCallbacks();
 
             Thread threadPumpEvents = new Thread(new Runnable() {
+
                 @Override
                 public void run() {
                     while (!threadPumpEventsStop) {
@@ -128,12 +130,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                                 libLock.unlock();
                             }
                             try {
-                                Thread.sleep(100);
+                                Thread.sleep(pumpEventsDelay);
                             } catch (InterruptedException ignored) {
 
                             }
                         } catch (Exception e) {
                             log.error("PumpEvents thread error", e);
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -203,11 +206,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                         playerListener.onRepeat(false);
                     }
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyBecameActive) {
+                    pumpEventsDelay = 10;
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onActive();
                     }
                     audioListener.onActive();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyBecameInactive) {
+                    pumpEventsDelay = 100;
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onInactive();
                     }

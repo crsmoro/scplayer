@@ -155,7 +155,7 @@ public class AudioPlayer implements AudioListener {
             onVolumeChanged(player.getVolume());
             if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))
                 ((BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE)).setValue(true);
-            input = new PipedInputStream(4096);
+            input = new PipedInputStream(1048576);
             output = new PipedOutputStream(input);
         } catch (LineUnavailableException | IOException e) {
             log.error("onActive error", e);
