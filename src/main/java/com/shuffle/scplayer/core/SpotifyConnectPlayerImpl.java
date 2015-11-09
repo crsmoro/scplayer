@@ -119,8 +119,8 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             Thread threadPumpEvents = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        while (!threadPumpEventsStop) {
+                    while (!threadPumpEventsStop) {
+                        try {
                             try {
                                 libLock.lock();
                                 spotifyLib.SpPumpEvents();
@@ -132,9 +132,9 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                             } catch (InterruptedException ignored) {
 
                             }
+                        } catch (Exception e) {
+                            log.error("PumpEvents thread error", e);
                         }
-                    } catch (Exception e) {
-                        log.error("PumpEvents thread error", e);
                     }
                 }
             });

@@ -262,6 +262,10 @@ public class AudioPlayer implements AudioListener {
         try {
             if (output != null)
                 output.close();
+        } catch (IOException e) {
+            log.error(e);
+        }
+        try {
             if (input != null)
                 input.close();
         } catch (IOException e) {
