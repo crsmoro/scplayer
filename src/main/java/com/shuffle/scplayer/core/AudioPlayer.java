@@ -34,7 +34,7 @@ public class AudioPlayer implements AudioListener {
     private AtomicBoolean play = new AtomicBoolean(true);
     private boolean isMuted = false;
 
-    public AudioPlayer(SpotifyConnectPlayer player) throws LineUnavailableException, IOException {
+    public AudioPlayer(final SpotifyConnectPlayer player) throws LineUnavailableException, IOException {
         this.player = player;
 
         Thread playing = new Thread(new Runnable() {
@@ -64,8 +64,12 @@ public class AudioPlayer implements AudioListener {
 
                             numbytes += bytesread;
 
-                            if (!audioLine.isOpen())
+                            if (!audioLine.isOpen()) {
+                                numbytes = 0;
+                                if (!player.isActive())
+                                    onInactive();
                                 continue;
+                            }
 
                             if (!audioLine.isRunning()) {
                                 audioLine.start();
@@ -97,8 +101,8 @@ public class AudioPlayer implements AudioListener {
     }
 
     private void playThreadWait() {
-        lock.lock();
         try {
+            lock.lock();
             isWaiting = true;
             waiting.await();
             isWaiting = false;
@@ -110,9 +114,9 @@ public class AudioPlayer implements AudioListener {
     }
 
     private void playThreadSignal() {
-        lock.lock();
         try {
-            waiting.signal();
+            lock.lock();
+            waiting.signalAll();
         } finally {
             lock.unlock();
         }
@@ -255,5 +259,17 @@ public class AudioPlayer implements AudioListener {
         stopPlayThread = true;
         if (audioLine != null)
             audioLine.close();
+        try {
+            if (output != null)
+                output.close();
+        } catch (IOException e) {
+            log.error(e);
+        }
+        try {
+            if (input != null)
+                input.close();
+        } catch (IOException e) {
+            log.error(e);
+        }
     }
 }

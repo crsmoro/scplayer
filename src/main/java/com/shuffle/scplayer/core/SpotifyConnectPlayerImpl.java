@@ -64,7 +64,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
 
-
             log.info("init");
             if (AudioSystem.getMixerInfo().length <= 0) {
                 log.error("No sound cards Avaliables");
@@ -120,17 +119,22 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             Thread threadPumpEvents = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        while (!threadPumpEventsStop) {
-                            spotifyLib.SpPumpEvents();
+                    while (!threadPumpEventsStop) {
+                        try {
+                            try {
+                                libLock.lock();
+                                spotifyLib.SpPumpEvents();
+                            } finally {
+                                libLock.unlock();
+                            }
                             try {
                                 Thread.sleep(100);
                             } catch (InterruptedException ignored) {
 
                             }
+                        } catch (Exception e) {
+                            log.error("PumpEvents thread error", e);
                         }
-                    } catch (Exception e) {
-                        log.error("PumpEvents thread error", e);
                     }
                 }
             });
@@ -207,6 +211,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onInactive();
                     }
+                    audioListener.onInactive();
                 } else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPlayTokenLost) {
                     for (PlayerListener playerListener : playerListeners) {
                         playerListener.onTokenLost();
@@ -542,6 +547,16 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     }
 
     @Override
+    public boolean isActive() {
+        try {
+            libLock.lock();
+            return NativeUtils.toBoolean(spotifyLib.SpPlaybackIsActiveDevice());
+        } finally {
+            libLock.unlock();
+        }
+    }
+
+    @Override
     public void close() {
         threadPumpEventsStop = true;
         try {
@@ -570,5 +585,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     @Override
     public AudioListener getAudioListener() {
         return audioListener;
+    }
+
+    @Override
+    public void setAudioListener(AudioListener audioListener) {
+        this.audioListener = audioListener;
     }
 }
