@@ -67,7 +67,7 @@ public class SCPlayerMain {
 
 		try {
 			// Define file appender with layout and output log file name
-			RollingFileAppender fileAppender = new RollingFileAppender(layout, "/storage/scplayer.log");
+			RollingFileAppender fileAppender = new RollingFileAppender(layout, "./scplayer.log");
 			fileAppender.setImmediateFlush(true);
 			fileAppender.setThreshold(Level.DEBUG);
 			fileAppender.setAppend(true);

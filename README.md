@@ -36,11 +36,16 @@ appKey - Location of your spotify_appkey.key
 
 Troubleshooting
 ----------------
-If you connect using a facebook account, librespot will not show up among the devices in the Spotify app. What you need to do is apply for a <a href="http://www.spotify.com/account/set-device-password/" target="_blank">device password</a> and use that to sign in instead.
+If you connect using a facebook account, scplayer will not show up among the devices in the Spotify app. What you need to do is apply for a <a href="http://www.spotify.com/account/set-device-password/" target="_blank">device password</a> and use that to sign in instead.
 
 If you are running on Openelec like I am, you have to run this command to enable alsa drivers<br/>
 from ssh type "echo snd_bcm2835 >> /storage/.config/modules-load.d/audio.conf"<br/>
 and reboot
+
+If you are running on OSMC you have to run this command to enable alsa drivers<br/>
+from ssh type "sudo modprobe snd_bcm2835"<br/>
+no need to reboot
+
 
 Disclaimer
 ----------------

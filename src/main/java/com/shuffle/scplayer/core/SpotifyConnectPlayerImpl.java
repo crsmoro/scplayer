@@ -12,6 +12,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Mixer;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -68,6 +70,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             if (AudioSystem.getMixerInfo().length <= 0) {
                 log.error("No sound cards Avaliables");
                 throw new Exception("No sound cards Avaliables");
+            }
+            else {
+            	log.debug("Mixers avaliables");
+            	for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo())
+            	{
+            		log.debug(mixerInfo.toString());
+            	}
             }
 
             byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
