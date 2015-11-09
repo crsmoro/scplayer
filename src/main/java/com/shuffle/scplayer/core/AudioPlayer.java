@@ -101,8 +101,8 @@ public class AudioPlayer implements AudioListener {
     }
 
     private void playThreadWait() {
-        lock.lock();
         try {
+            lock.lock();
             isWaiting = true;
             waiting.await();
             isWaiting = false;
@@ -114,9 +114,9 @@ public class AudioPlayer implements AudioListener {
     }
 
     private void playThreadSignal() {
-        lock.lock();
         try {
-            waiting.signal();
+            lock.lock();
+            waiting.signalAll();
         } finally {
             lock.unlock();
         }
@@ -260,8 +260,10 @@ public class AudioPlayer implements AudioListener {
         if (audioLine != null)
             audioLine.close();
         try {
-            output.close();
-            input.close();
+            if (output != null)
+                output.close();
+            if (input != null)
+                input.close();
         } catch (IOException e) {
             log.error(e);
         }
