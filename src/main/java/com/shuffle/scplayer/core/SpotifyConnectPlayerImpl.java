@@ -73,6 +73,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private AudioListener audioListener;
     private Mixer.Info mixer;
+    private int pumpEventsDelay = 100;
 
     private final Lock libLock =  new ReentrantLock();
     private final SpotifyLibrary spotifyLib;
@@ -86,13 +87,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     	mapBitrate.put(160, SpBitrate.kSpBitrate160k);
     	mapBitrate.put(320, SpBitrate.kSpBitrate320k);
     }
-    
+
     private final File credentials = new File("./credentials.json");
 
     public SpotifyConnectPlayerImpl() {
         this(new File("./spotify_appkey.key"), "spotify_embedded_shared");
     }
-    
+
     public SpotifyConnectPlayerImpl(File appKey) {
         this(appKey, "spotify_embedded_shared");
     }
@@ -100,7 +101,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     public SpotifyConnectPlayerImpl(File appKey, Properties properties) {
         this(appKey, "spotify_embedded_shared");
     }
-    
+
     public SpotifyConnectPlayerImpl(File appKey, String libraryName) {
     	this(appKey, libraryName, System.getProperties());
     }
@@ -111,7 +112,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 log.warn("Already Initialized");
                 throw new IllegalArgumentException("Already Initialized");
             }
-            
+
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
 
             log.info("init");
@@ -158,7 +159,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             	}
             	setMixer(mixer);
             }
-            	
+
 
             spConnectionCallbacks = new SpConnectionCallbacks.ByReference();
             spConnectionCallbacks.notify$ = new SpPlaybackCallbacks.notify_callback() {
@@ -214,6 +215,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             registerCallbacks();
 
             Thread threadPumpEvents = new Thread(new Runnable() {
+
                 @Override
                 public void run() {
                     while (!threadPumpEventsStop) {
@@ -225,12 +227,13 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                                 libLock.unlock();
                             }
                             try {
-                                Thread.sleep(100);
+                                Thread.sleep(pumpEventsDelay);
                             } catch (InterruptedException ignored) {
 
                             }
                         } catch (Exception e) {
                             log.error("PumpEvents thread error", e);
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -694,12 +697,12 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     public void setAudioListener(AudioListener audioListener) {
         this.audioListener = audioListener;
     }
-    
+
     @Override
     public Mixer.Info getMixer() {
     	return mixer;
     }
-    
+
     @Override
     public void setMixer(Mixer.Info mixer) {
     	if (!AudioSystem.getMixer(mixer).isLineSupported(AudioListener.DATALINE)) {
