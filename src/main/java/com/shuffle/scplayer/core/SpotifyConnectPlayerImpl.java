@@ -281,9 +281,9 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
         Pointer pointerAppKey = NativeUtils.pointerFrom(appKeyByte);
 
         spConfig.buffer = pointerBlank;
-        spConfig.buffer_size = new NativeLong(1048576, true);
+        spConfig.buffer_size = new NativeLong(1048576);
         spConfig.app_key = pointerAppKey;
-        spConfig.app_key_size = new NativeLong(appKeyByte.length, true);
+        spConfig.app_key_size = new NativeLong(appKeyByte.length);
         spConfig.deviceId = NativeUtils.pointerFrom(deviceId);
         spConfig.remoteName = NativeUtils.pointerFrom(playerName);
         spConfig.brandName = NativeUtils.pointerFrom("DummyBrand");
