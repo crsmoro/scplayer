@@ -48,6 +48,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private boolean threadPumpEventsStop = false;
     
     private final File credentials = new File("./credentials.json");
+    private Mixer.Info mixerInfo;
 
     public SpotifyConnectPlayerImpl() {
         this(new File("./spotify_appkey.key"), "spotify_embedded_shared");
@@ -599,5 +600,20 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     @Override
     public void setAudioListener(AudioListener audioListener) {
         this.audioListener = audioListener;
+    }
+
+    @Override
+    public void setMixer(String mixerName) {
+        for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo())
+            if (mixerInfo.getName().equals(mixerName)) {
+                this.mixerInfo = mixerInfo;
+                return;
+            }
+        throw new IllegalArgumentException("Bad mixer " + mixerName);
+    }
+
+    @Override
+    public Mixer.Info getMixer() {
+        return mixerInfo;
     }
 }

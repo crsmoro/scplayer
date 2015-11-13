@@ -22,7 +22,6 @@ public class AudioPlayer implements AudioListener {
     private final SpotifyConnectPlayer player;
 
     private AudioFormat pcm = new AudioFormat(RATE, 16, CHANNELS, true, false);
-    private DataLine.Info info = new DataLine.Info(SourceDataLine.class, pcm);
     private SourceDataLine audioLine;
     private PipedInputStream input;
     private PipedOutputStream output;
@@ -150,7 +149,10 @@ public class AudioPlayer implements AudioListener {
     @Override
     public void onActive() {
         try {
-            audioLine = (SourceDataLine) AudioSystem.getLine(info);
+            if (player.getMixer() != null)
+                audioLine = AudioSystem.getSourceDataLine(pcm, player.getMixer());
+            else
+                audioLine = AudioSystem.getSourceDataLine(pcm);
             audioLine.open(pcm);
             onVolumeChanged(player.getVolume());
             if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))

@@ -27,6 +27,7 @@ public class SCPlayerMain {
 		initLogger();
 
 		String playerName = System.getProperty("playerName", "SCPlayer");
+		String mixer = System.getProperty("mixer");
 		String username = System.getProperty("username");
 		String password = System.getProperty("password");
 		Boolean standalone = Boolean.getBoolean("standalone");
@@ -44,6 +45,9 @@ public class SCPlayerMain {
 
 		if (playerName != null && !"".equalsIgnoreCase(playerName)) {
 			player.setPlayerName(playerName);
+		}
+		if (mixer != null && !"".equalsIgnoreCase(mixer)) {
+			player.setMixer(mixer);
 		}
 		if (username != null && !"".equalsIgnoreCase(username) && password != null && !"".equalsIgnoreCase(password)) {
 			player.login(username, password);
