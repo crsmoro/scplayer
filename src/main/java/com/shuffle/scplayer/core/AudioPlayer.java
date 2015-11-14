@@ -20,9 +20,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AudioPlayer implements AudioListener {
     private static final transient Log log = LogFactory.getLog(AudioPlayer.class);
     private final SpotifyConnectPlayer player;
-
-    private AudioFormat pcm = new AudioFormat(RATE, 16, CHANNELS, true, false);
-    private DataLine.Info info = new DataLine.Info(SourceDataLine.class, pcm);
     private SourceDataLine audioLine;
     private PipedInputStream input;
     private PipedOutputStream output;
@@ -150,8 +147,14 @@ public class AudioPlayer implements AudioListener {
     @Override
     public void onActive() {
         try {
-            audioLine = (SourceDataLine) AudioSystem.getLine(info);
-            audioLine.open(pcm);
+        	if (player.getMixer() != null) {
+        		log.debug("Custom mixer " + player.getMixer().getName());
+        		audioLine = AudioSystem.getSourceDataLine(PCM, player.getMixer());
+        	}
+        	else {
+        		audioLine = AudioSystem.getSourceDataLine(PCM);
+        	}
+            audioLine.open(PCM);
             onVolumeChanged(player.getVolume());
             if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))
                 ((BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE)).setValue(true);
@@ -272,4 +275,5 @@ public class AudioPlayer implements AudioListener {
             log.error(e);
         }
     }
+    
 }

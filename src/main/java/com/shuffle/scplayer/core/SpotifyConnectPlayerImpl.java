@@ -17,11 +17,8 @@ import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
 import javax.sound.sampled.Mixer;
-import javax.sound.sampled.SourceDataLine;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -75,6 +72,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private String deviceId = UUID.randomUUID().toString();
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private AudioListener audioListener;
+    private Mixer.Info mixer;
 
     private final Lock libLock =  new ReentrantLock();
     private final SpotifyLibrary spotifyLib;
@@ -121,21 +119,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 log.error("No sound cards Avaliables");
                 throw new Exception("No sound cards Avaliables");
             }
-            else {
-            	log.debug("Mixers avaliables");
-            	DataLine.Info info = new DataLine.Info(SourceDataLine.class, new AudioFormat(44100, 16, 2, true, false));
-            	for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo())
-            	{
-            		log.debug(mixerInfo.toString());
-            		//SourceDataLine sourceDataLine = (SourceDataLine) AudioSystem.getMixer(mixerInfo).getLine();
-            		log.debug("isLineSupported : " + AudioSystem.getMixer(mixerInfo).isLineSupported(info));
-            		
-            	}
-            }
 
             byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
             
-            if (properties.getProperty("playerName") != null)
+            if (properties.getProperty("player.name") != null)
             {
             	forcePlayerName = true;
             }
@@ -153,6 +140,21 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             spConfig = initSPConfig(appKeyByte);
 
             audioListener = new AudioPlayer(this);
+            String mixerString = properties.getProperty("mixer", "0");
+            if (mixerString != null && !"".equalsIgnoreCase(mixerString))
+            {
+            	int mixerInt = 0;
+            	try {
+            		mixerInt = new Integer(mixerString);
+            	}
+            	catch (NumberFormatException e) {
+            		throw new IllegalArgumentException("Invalid mixer, this is set by the index not the name");
+            	}
+            	Mixer.Info[] mixers = AudioSystem.getMixerInfo();
+            	Mixer.Info mixer = mixerInt < mixers.length  ? mixers[mixerInt] : mixers[0];
+            	setMixer(mixer);
+            }
+            	
 
             spConnectionCallbacks = new SpConnectionCallbacks.ByReference();
             spConnectionCallbacks.notify$ = new SpPlaybackCallbacks.notify_callback() {
@@ -200,7 +202,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                             e.printStackTrace();
                         }
                     }
-
                 }
             };
             spotifyLib.SpRegisterConnectionCallbacks(spConnectionCallbacks, null);
@@ -688,5 +689,18 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     @Override
     public void setAudioListener(AudioListener audioListener) {
         this.audioListener = audioListener;
+    }
+    
+    @Override
+    public Mixer.Info getMixer() {
+    	return mixer;
+    }
+    
+    @Override
+    public void setMixer(Mixer.Info mixer) {
+    	if (!AudioSystem.getMixer(mixer).isLineSupported(AudioListener.DATALINE)) {
+    		throw new IllegalArgumentException("Mixer does not support PCM");
+    	}
+    	this.mixer = mixer;
     }
 }

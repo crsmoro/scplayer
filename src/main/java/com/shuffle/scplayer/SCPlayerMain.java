@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Mixer;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -12,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.RollingFileAppender;
 
+import com.shuffle.scplayer.core.AudioListener;
 import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
@@ -41,6 +45,18 @@ public class SCPlayerMain {
 			log.error("appkey not found");
 			System.exit(-1);
 		}
+		
+		if (Boolean.getBoolean("list.mixers")) {
+        	System.out.println("Mixers avaliables");
+        	System.out.println("Choose your mixer and set -Dmixer=%index%");
+        	System.out.println("Index - Name - Description - Version");
+        	Mixer.Info[] mixers = AudioSystem.getMixerInfo();
+        	for (int i = 0; i< mixers.length; i++) {
+        		Mixer.Info mixerInfo = mixers[i];
+        		System.out.println(i + " - " + mixerInfo.getName() + " - " + mixerInfo.getDescription() + " - " + mixerInfo.getVersion() + (AudioSystem.getMixer(mixerInfo).isLineSupported(AudioListener.DATALINE)?" - Support PCM Audio":""));
+        	}
+        	return;
+        }
 
 		SpotifyConnectPlayer player = new SpotifyConnectPlayerImpl(appKey);
 
