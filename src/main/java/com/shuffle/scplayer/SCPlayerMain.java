@@ -1,13 +1,9 @@
 package com.shuffle.scplayer;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Mixer;
-
+import com.shuffle.scplayer.core.AudioListener;
+import com.shuffle.scplayer.core.SpotifyConnectPlayer;
+import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
+import com.shuffle.scplayer.web.PlayerWebServerIntegration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -15,10 +11,12 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.RollingFileAppender;
 
-import com.shuffle.scplayer.core.AudioListener;
-import com.shuffle.scplayer.core.SpotifyConnectPlayer;
-import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
-import com.shuffle.scplayer.web.PlayerWebServerIntegration;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Mixer;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SCPlayerMain {
 	private static final transient Log log = LogFactory.getLog(SCPlayerMain.class);
@@ -58,7 +56,7 @@ public class SCPlayerMain {
         	return;
         }
 
-		SpotifyConnectPlayer player = new SpotifyConnectPlayerImpl(appKey);
+		SpotifyConnectPlayer player = new SpotifyConnectPlayerImpl(appKey, System.getProperties());
 
 		if (!standalone) {
 			PlayerWebServerIntegration webServerIntegration = new PlayerWebServerIntegration(player, webPort);
