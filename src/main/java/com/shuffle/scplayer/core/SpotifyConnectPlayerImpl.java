@@ -1,26 +1,55 @@
 package com.shuffle.scplayer.core;
 
-import com.google.gson.*;
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.shuffle.scplayer.jna.*;
-import com.shuffle.scplayer.jna.SpotifyLibrary.*;
-import com.shuffle.scplayer.utils.NativeUtils;
-import com.sun.jna.*;
-import com.sun.jna.ptr.IntByReference;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.ochafik.lang.jnaerator.runtime.NativeSize;
+import com.shuffle.scplayer.jna.SpConfig;
+import com.shuffle.scplayer.jna.SpConnectionCallbacks;
+import com.shuffle.scplayer.jna.SpDebugCallbacks;
+import com.shuffle.scplayer.jna.SpMetadata;
+import com.shuffle.scplayer.jna.SpPlaybackCallbacks;
+import com.shuffle.scplayer.jna.SpSampleFormat;
+import com.shuffle.scplayer.jna.SpotifyLibrary;
+import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
+import com.shuffle.scplayer.jna.SpotifyLibrary.SpConnectionNotify;
+import com.shuffle.scplayer.jna.SpotifyLibrary.SpDeviceType;
+import com.shuffle.scplayer.jna.SpotifyLibrary.SpError;
+import com.shuffle.scplayer.jna.SpotifyLibrary.SpImageSize;
+import com.shuffle.scplayer.jna.SpotifyLibrary.SpPlaybackNotify;
+import com.shuffle.scplayer.utils.NativeUtils;
+import com.sun.jna.Memory;
+import com.sun.jna.Native;
+import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 
 /**
  * @author crsmoro
@@ -36,9 +65,14 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private final transient Gson gson = new GsonBuilder().create();
     private String username;
     private String blob;
+    private boolean rememberMe;
+    private boolean forcePlayerName = false;
+    private int bitrate = SpBitrate.kSpBitrate320k;
+    private Map<Integer, Integer> mapBitrate = new HashMap<>();
     private String deviceId = UUID.randomUUID().toString();
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private AudioListener audioListener;
+    private Mixer.Info mixer;
 
     private final Lock libLock =  new ReentrantLock();
     private final SpotifyLibrary spotifyLib;
@@ -47,23 +81,37 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private String playerName = "SCPlayer";
     private boolean threadPumpEventsStop = false;
     
+    {
+    	mapBitrate.put(90, SpBitrate.kSpBitrate90k);
+    	mapBitrate.put(160, SpBitrate.kSpBitrate160k);
+    	mapBitrate.put(320, SpBitrate.kSpBitrate320k);
+    }
+    
     private final File credentials = new File("./credentials.json");
 
     public SpotifyConnectPlayerImpl() {
         this(new File("./spotify_appkey.key"), "spotify_embedded_shared");
     }
-
+    
     public SpotifyConnectPlayerImpl(File appKey) {
         this(appKey, "spotify_embedded_shared");
     }
 
-    public SpotifyConnectPlayerImpl(File appKey, String libraryName) throws IllegalArgumentException {
+    public SpotifyConnectPlayerImpl(File appKey, Properties properties) {
+        this(appKey, "spotify_embedded_shared");
+    }
+    
+    public SpotifyConnectPlayerImpl(File appKey, String libraryName) {
+    	this(appKey, libraryName, System.getProperties());
+    }
+
+    public SpotifyConnectPlayerImpl(File appKey, String libraryName, Properties properties) throws IllegalArgumentException {
         try {
             if (instance != null) {
                 log.warn("Already Initialized");
                 throw new IllegalArgumentException("Already Initialized");
             }
-
+            
             spotifyLib = (SpotifyLibrary) Native.loadLibrary(libraryName, SpotifyLibrary.class);
 
             log.info("init");
@@ -71,21 +119,42 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 log.error("No sound cards Avaliables");
                 throw new Exception("No sound cards Avaliables");
             }
-            else {
-            	log.debug("Mixers avaliables");
-            	for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo())
-            	{
-            		log.debug(mixerInfo.toString());
-            	}
-            }
 
             byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
             
-            verifyCredentialFile(credentials);
+            if (properties.getProperty("player.name") != null)
+            {
+            	forcePlayerName = true;
+            }
+            playerName = properties.getProperty("player.name", "SCPlayer");
+    		username = properties.getProperty("username");
+    		String password = properties.getProperty("password");
+    		rememberMe = Boolean.parseBoolean(properties.getProperty("remember.me", "true"));
+    		bitrate = Integer.getInteger("bitrate", SpBitrate.kSpBitrate320k);
+
+    		if (username == null || "".equalsIgnoreCase(username) || password == null || "".equalsIgnoreCase(password))
+    		{
+    			verifyCredentialFile(credentials);
+    		}
 
             spConfig = initSPConfig(appKeyByte);
 
             audioListener = new AudioPlayer(this);
+            String mixerString = properties.getProperty("mixer", "0");
+            if (mixerString != null && !"".equalsIgnoreCase(mixerString))
+            {
+            	int mixerInt = 0;
+            	try {
+            		mixerInt = new Integer(mixerString);
+            	}
+            	catch (NumberFormatException e) {
+            		throw new IllegalArgumentException("Invalid mixer, this is set by the index not the name");
+            	}
+            	Mixer.Info[] mixers = AudioSystem.getMixerInfo();
+            	Mixer.Info mixer = mixerInt < mixers.length  ? mixers[mixerInt] : mixers[0];
+            	setMixer(mixer);
+            }
+            	
 
             spConnectionCallbacks = new SpConnectionCallbacks.ByReference();
             spConnectionCallbacks.notify$ = new SpPlaybackCallbacks.notify_callback() {
@@ -103,21 +172,36 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             };
             spConnectionCallbacks.new_credentials = new SpConnectionCallbacks.new_credentials_callback() {
                 public void apply(Pointer blob, Pointer userdata) {
-                    log.info("new_credentials_callback");
-                    log.debug("blob : " + blob.getString(0));
-                    JsonObject credentialsJson = new JsonObject();
-                    credentialsJson.addProperty("username", username);
-                    credentialsJson.addProperty("blob", blob.getString(0));
-                    credentialsJson.addProperty("playerName", getPlayerName());
-                    credentialsJson.addProperty("deviceId", deviceId);
-                    try {
-                        FileWriter fileWriter = new FileWriter(credentials);
-                        fileWriter.write(gson.toJson(credentialsJson));
-                        fileWriter.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    log.debug("new_credentials_callback");
+                    log.trace("blob : " + blob.getString(0));
+                    log.trace("remember : " + rememberMe);
+                    if (rememberMe)
+                    {
+                    	JsonObject credentialsJson = new JsonObject();
+                        credentialsJson.addProperty("username", username);
+                        credentialsJson.addProperty("blob", blob.getString(0));
+                        credentialsJson.addProperty("playerName", getPlayerName());
+                        credentialsJson.addProperty("deviceId", deviceId);
+                        try {
+                        	if (!credentials.exists())
+                        	{
+                        		log.debug("Credentials file not exists");
+                                try
+                    			{
+                    				credentials.createNewFile();
+                    			}
+                    			catch (SecurityException | IOException e)
+                    			{
+                    				log.error("Error trying to write credentials file", e);
+                    			}
+                        	}
+                            FileWriter fileWriter = new FileWriter(credentials);
+                            fileWriter.write(gson.toJson(credentialsJson));
+                            fileWriter.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-
                 }
             };
             spotifyLib.SpRegisterConnectionCallbacks(spConnectionCallbacks, null);
@@ -149,7 +233,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             });
             threadPumpEvents.start();
 
-            spotifyLib.SpPlaybackSetBitrate(SpBitrate.kSpBitrate320k);
+            spotifyLib.SpPlaybackSetBitrate(mapBitrate.get(bitrate) != null ? mapBitrate.get(bitrate) : SpBitrate.kSpBitrate320k);
 
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 @Override
@@ -158,7 +242,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                 }
             }));
             
-            if (username != null && !"".equalsIgnoreCase(username) && blob != null && !"".equalsIgnoreCase(blob)) {
+            if (username != null && !"".equalsIgnoreCase(username) && password != null && !"".equalsIgnoreCase(password)) {
+            	spotifyLib.SpConnectionLoginPassword(username, password);
+            }
+            else if (username != null && !"".equalsIgnoreCase(username) && blob != null && !"".equalsIgnoreCase(blob)) {
                 spotifyLib.SpConnectionLoginBlob(username, blob);
             }
 
@@ -322,8 +409,11 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
                     log.trace("Username : " + username);
                     blob = credentialsJson.get("blob").getAsString();
                     log.trace("Blob : " + blob);
-                    this.playerName = credentialsJson.get("playerName").getAsString();
-                    log.trace("PlayerName : " + playerName);
+                    if (!forcePlayerName)
+                    {
+                    	this.playerName = credentialsJson.get("playerName").getAsString();
+                        log.trace("PlayerName : " + playerName);
+                    }
                     deviceId = credentialsJson.get("deviceId").getAsString();
                     log.trace("deviceId : " + deviceId);
                 }
@@ -599,5 +689,18 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     @Override
     public void setAudioListener(AudioListener audioListener) {
         this.audioListener = audioListener;
+    }
+    
+    @Override
+    public Mixer.Info getMixer() {
+    	return mixer;
+    }
+    
+    @Override
+    public void setMixer(Mixer.Info mixer) {
+    	if (!AudioSystem.getMixer(mixer).isLineSupported(AudioListener.DATALINE)) {
+    		throw new IllegalArgumentException("Mixer does not support PCM");
+    	}
+    	this.mixer = mixer;
     }
 }

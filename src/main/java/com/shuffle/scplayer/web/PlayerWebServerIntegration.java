@@ -22,9 +22,13 @@ public class PlayerWebServerIntegration implements PlayerListener {
     private WebServer webServer;
 
     private final transient Gson gson = new GsonBuilder().create();
-
+    
     public PlayerWebServerIntegration(final SpotifyConnectPlayer spotifyConnectPlayer) {
-        final WebServer webServer = new WebServer(4000) {
+    	this(spotifyConnectPlayer, 4000);
+    }
+
+    public PlayerWebServerIntegration(final SpotifyConnectPlayer spotifyConnectPlayer, int port) {
+        final WebServer webServer = new WebServer(port) {
 
             @Override
             protected void onMessage(String message, com.shuffle.scplayer.web.WebSocket webSocket) {
