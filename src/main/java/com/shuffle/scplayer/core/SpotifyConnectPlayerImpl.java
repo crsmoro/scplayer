@@ -143,15 +143,19 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
             String mixerString = properties.getProperty("mixer", "0");
             if (mixerString != null && !"".equalsIgnoreCase(mixerString))
             {
-            	int mixerInt = 0;
+            	Mixer.Info[] mixers = AudioSystem.getMixerInfo();
+            	Mixer.Info mixer = mixers[0];
             	try {
-            		mixerInt = new Integer(mixerString);
+            		int mixerInt = new Integer(mixerString);
+            		mixer = mixerInt < mixers.length  ? mixers[mixerInt] : mixers[0];
             	}
             	catch (NumberFormatException e) {
-            		throw new IllegalArgumentException("Invalid mixer, this is set by the index not the name");
+            		for (int i=0; i<mixers.length; i++) {
+            			if (mixers[i].getName().equals(mixerString)) {
+            				mixer = mixers[i];
+            			}
+            		}
             	}
-            	Mixer.Info[] mixers = AudioSystem.getMixerInfo();
-            	Mixer.Info mixer = mixerInt < mixers.length  ? mixers[mixerInt] : mixers[0];
             	setMixer(mixer);
             }
             	

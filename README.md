@@ -28,11 +28,13 @@ Java options -D&lt;option&gt;=&lt;value&gt;
 * player.name - Set the player name, will appears on all your connect devices (Default will be SCPlayer)<br/>
 * username - Set username<br/>
 * password - Set password<br/>
+* remember.me - Save your credentials for the next start (true/false), defaults to true<br/>
 * standalone - Runs without the web version (true/false)<br/>
 * debug - Set debug level - 0 > WARN, 1 > INFO, 2 > DEBUG, 3 > TRACE<br/>
 * app.key - Path to your spotify_appkey.key<br/>
 * list.mixers - List the available mixers for use<br/>
-* mixer - Set the mixer by its index (Use list.mixers to get the index)<br/>
+* mixer - Set the mixer, you can use either the name or index provided by list.mixers<br/>
+* bitrate - Set the bitrate (90/160/320)
 
 Example: `./jdk1.8.0_60/bin/java -Dplayer.name=Kitchen -Dmixer=0 -Dapp.key=/home/pi/spotify_appkey.key -jar SCPlayer.jar`
 
