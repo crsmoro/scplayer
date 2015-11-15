@@ -28,8 +28,4 @@ public interface PlayerListener {
     void onTokenLost();
 
     void onVolumeChanged(short volume);
-
-    void onLoggedIn();
-
-    void onLoggedOut();
 }

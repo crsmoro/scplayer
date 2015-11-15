@@ -2,6 +2,7 @@ package com.shuffle.scplayer.web;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.shuffle.scplayer.core.AuthenticationListener;
 import com.shuffle.scplayer.core.PlayerListener;
 import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 import com.shuffle.scplayer.core.Track;
@@ -15,7 +16,7 @@ import java.util.Map;
  * @author LeanderK
  * @version 1.0
  */
-public class PlayerWebServerIntegration implements PlayerListener {
+public class PlayerWebServerIntegration implements PlayerListener, AuthenticationListener {
 
     private static final transient Log log = LogFactory.getLog(PlayerWebServerIntegration.class);
 
@@ -186,12 +187,17 @@ public class PlayerWebServerIntegration implements PlayerListener {
     }
 
     @Override
-    public void onLoggedIn() {
+    public void onLoggedIn(String username) {
         webServer.sendMessage(gson.toJson(new WebSocketObject("logged", true)));
     }
 
     @Override
-    public void onLoggedOut() {
+    public void onLoggedOut(String username) {
         webServer.sendMessage(gson.toJson(new WebSocketObject("logged", false)));
     }
+
+	@Override
+	public void onNewCredentials(String username, String blob) {
+		
+	}
 }

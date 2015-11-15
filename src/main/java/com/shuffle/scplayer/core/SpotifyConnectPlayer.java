@@ -43,6 +43,8 @@ public interface SpotifyConnectPlayer {
     void volume(short volume);
 
     void login(String username, String password);
+    
+    void loginBlob(String username, String blob);
 
     void logout();
 
@@ -63,4 +65,14 @@ public interface SpotifyConnectPlayer {
     Mixer.Info getMixer();
     
     void setMixer(Mixer.Info mixer);
+    
+    void addAuthenticationListener(AuthenticationListener authenticationListener);
+
+    void removeAuthenticationListener(AuthenticationListener authenticationListener);
+    
+    String getDeviceId();
+    
+    void setBitrate(int bitrate);
+    
+    int getBitrate();
 }

@@ -30,7 +30,7 @@ public interface AudioListener {
 
     void onAudioFlush();
 
-    void onAudioData(byte[] data);
+    int onAudioData(byte[] data);
 
     void onVolumeChanged(short volume);
 
