@@ -187,10 +187,12 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 					for (PlayerListener playerListener : playerListeners) {
 						playerListener.onPlay();
 					}
+					audioListener.onPlay();
 				} else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPause) {
 					for (PlayerListener playerListener : playerListeners) {
 						playerListener.onPause();
 					}
+					audioListener.onPause();
 				} else if (notification == SpPlaybackNotify.kSpPlaybackNotifyTrackChanged) {
 					for (PlayerListener playerListener : playerListeners) {
 						playerListener.onTrackChanged(getPlayingTrack());

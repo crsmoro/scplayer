@@ -78,10 +78,12 @@ public class AudioPlayer implements AudioListener {
 
     @Override
     public void onPlay() {
+    	onActive();
     }
 
     @Override
     public void onPause() {
+    	onInactive();
     }
 
     @Override
