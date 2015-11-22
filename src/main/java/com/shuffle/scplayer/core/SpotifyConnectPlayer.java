@@ -75,4 +75,8 @@ public interface SpotifyConnectPlayer {
     void setBitrate(int bitrate);
     
     int getBitrate();
+
+    void setMixerId(int mixerId);
+
+    int getMixerId();
 }
