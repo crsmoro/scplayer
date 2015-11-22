@@ -79,4 +79,8 @@ public interface SpotifyConnectPlayer {
     void setMixerId(int mixerId);
 
     int getMixerId();
+    
+    void setAudioEngine(AudioEngine aAudioEngine);
+    
+    AudioEngine getAudioEngine();
 }

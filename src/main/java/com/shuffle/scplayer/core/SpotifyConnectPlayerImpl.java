@@ -66,10 +66,31 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private boolean threadPumpEventsStop = false;
 
     /**
+     * Java audio engine by default 
+     */
+    private AudioEngine audioEngine = AudioEngine.JAVAAUDIO;
+    
+    /**
      *
      */
     private int mixerId = 0;
 
+    /**
+     * 
+     * @param aAudioEngine 
+     */
+    public void setAudioEngine(AudioEngine aAudioEngine){
+	audioEngine = aAudioEngine;
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public AudioEngine getAudioEngine(){
+	return audioEngine;
+    }
+    
     public SpotifyConnectPlayerImpl() {
 	this(new File("./spotify_appkey.key"));
     }
@@ -96,8 +117,8 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
 	    log.info("init");
 	    if (AudioSystem.getMixerInfo().length <= 0) {
-		log.error("No sound cards Avaliables");
-		throw new Exception("No sound cards Avaliables");
+		log.error("No sound cards Availables");
+		throw new Exception("No sound cards Availables");
 	    }
 
 	    byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
@@ -106,8 +127,19 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
 	    spConfig = initSPConfig(appKeyByte);
 
-	    //audioListener = new AudioPlayer(this);
-	    audioListener = new OpenALPlayer(this);
+	    switch(audioEngine){
+		case JAVAAUDIO:
+		    audioListener = new AudioPlayer(this);
+		    break;
+		case OPENALAUDIO:
+		    audioListener = new OpenALPlayer(this);
+		    break;
+		default:
+		    log.error("Audio engine not known");
+		    throw new Exception("Audio engine not known");
+	    }
+	    
+	    
 
 	    registerConnectionCallbacks();
 	    registerPlaybackCallbacks();
