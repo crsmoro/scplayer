@@ -118,11 +118,9 @@ public class JavaAudioPlayer implements AudioListener {
 	    return;
 	}
 	log.info("Activating...");
-	/*
 	if (audioLine != null && audioLine.isOpen()) {
 	    audioLine.close();
 	}
-	*/
 	try {
 	    audioLine.open(PCM);
 	    onVolumeChanged(player.getVolume());
