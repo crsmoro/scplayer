@@ -222,6 +222,8 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		}
 	    }));
 
+	    
+	    
 	    try {
 		initAudioEngine(aMixerId);
 	    } catch (Exception ex) {

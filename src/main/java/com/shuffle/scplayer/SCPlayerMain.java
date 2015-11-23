@@ -59,7 +59,7 @@ public class SCPlayerMain {
     /**
      *
      */
-    private static final AudioEngine audioEngine = AudioEngine.JAVAAUDIO;
+    private static final AudioEngine audioEngine = AudioEngine.OPENALAUDIO;
 
     static {
 	logLevel.put(0, Level.WARN);
@@ -191,9 +191,6 @@ public class SCPlayerMain {
 	}
 
 	player.setPlayerName(playerName);
-
-		    
-	
     }
 
     private static void initLogger() {
