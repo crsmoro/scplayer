@@ -10,14 +10,12 @@ import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Mixer;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
+import static com.shuffle.scplayer.core.AudioEngine.JAVAAUDIO;
 import com.shuffle.scplayer.jna.SpConfig;
 import com.shuffle.scplayer.jna.SpConnectionCallbacks;
 import com.shuffle.scplayer.jna.SpDebugCallbacks;
@@ -41,6 +39,8 @@ import com.sun.jna.ptr.IntByReference;
 /**
  * @author crsmoro
  * @author LeanderK
+ * @author Tokazio
+ * @version 1.1
  */
 public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
@@ -55,7 +55,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private List<PlayerListener> playerListeners = new ArrayList<>();
     private List<AuthenticationListener> authenticationListeners = new ArrayList<>();
     private AudioListener audioListener;
-    private Mixer.Info mixer;
+
     private int pumpEventsDelay = 100;
 
     private final Lock libLock = new ReentrantLock();
@@ -66,47 +66,92 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     private boolean threadPumpEventsStop = false;
 
     /**
-     * Java audio engine by default 
+     * Java audio engine by default
      */
     private AudioEngine audioEngine = AudioEngine.JAVAAUDIO;
-    
+   
     /**
      *
      */
-    private int mixerId = 0;
-
-    /**
-     * 
-     * @param aAudioEngine 
-     */
-    public void setAudioEngine(AudioEngine aAudioEngine){
-	audioEngine = aAudioEngine;
-    }
-    
-    /**
-     * 
-     * @return 
-     */
-    public AudioEngine getAudioEngine(){
-	return audioEngine;
-    }
-    
+    @Deprecated
     public SpotifyConnectPlayerImpl() {
 	this(new File("./spotify_appkey.key"));
     }
 
+    /**
+     *
+     * @param appKey
+     */
+    @Deprecated
     public SpotifyConnectPlayerImpl(File appKey) {
 	this(appKey, new File("./libspotify_embedded_shared.so"));
     }
 
+    /**
+     *
+     * @param appKey
+     * @param library
+     */
+    @Deprecated
     public SpotifyConnectPlayerImpl(File appKey, File library) {
 	this(appKey, library, UUID.randomUUID().toString());
     }
 
+    /**
+     * For compatibility
+     *
+     * @param appKey
+     * @param deviceId
+     * @deprecated use constructor with audioEngine parameter
+     */
+    @Deprecated
     public SpotifyConnectPlayerImpl(File appKey, String deviceId) {
 	this(appKey, new File("./libspotify_embedded_shared.so"), deviceId);
     }
 
+    /**
+     *
+     * @param appKey
+     * @param deviceId
+     * @param aAudioEngine
+     */
+    public SpotifyConnectPlayerImpl(File appKey, String deviceId, AudioEngine aAudioEngine, int aMixerId) {
+	this(appKey, new File("./libspotify_embedded_shared.so"), deviceId, aAudioEngine, aMixerId);
+    }
+
+    /**
+     *
+     * @param appKey
+     * @param library
+     * @param deviceId
+     * @param aAudioEngine
+     * @throws IllegalArgumentException
+     */
+    public SpotifyConnectPlayerImpl(File appKey, File library, String deviceId, AudioEngine aAudioEngine, int aMixerId) throws IllegalArgumentException {
+	try {
+	    if (instance != null) {
+		log.warn("Already Initialized");
+		throw new IllegalArgumentException("Already Initialized");
+	    }
+	    spotifyLib = (SpotifyLibrary) Native.loadLibrary(library.getAbsolutePath(), SpotifyLibrary.class);
+	} catch (Exception e) {
+	    log.error("General error", e);
+	    throw new IllegalArgumentException("general error", e);
+	}
+	this.audioEngine = aAudioEngine;
+	init(appKey, library, deviceId, aMixerId);
+    }
+
+    /**
+     * For compatibility
+     *
+     * @param appKey
+     * @param library
+     * @param deviceId
+     * @throws IllegalArgumentException
+     * @deprecated use constructor with audioEngine parameter
+     */
+    @Deprecated
     public SpotifyConnectPlayerImpl(File appKey, File library, String deviceId) throws IllegalArgumentException {
 	try {
 	    if (instance != null) {
@@ -114,32 +159,29 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		throw new IllegalArgumentException("Already Initialized");
 	    }
 	    spotifyLib = (SpotifyLibrary) Native.loadLibrary(library.getAbsolutePath(), SpotifyLibrary.class);
+	} catch (Exception e) {
+	    log.error("General error", e);
+	    throw new IllegalArgumentException("general error", e);
+	}
+	init(appKey, library, deviceId, 0);
+    }
+
+    /**
+     *
+     * @param appKey
+     * @param library
+     * @param deviceId
+     */
+    private void init(File appKey, File library, String deviceId, int aMixerId) {
+	try {
 
 	    log.info("init");
-	    if (AudioSystem.getMixerInfo().length <= 0) {
-		log.error("No sound cards Availables");
-		throw new Exception("No sound cards Availables");
-	    }
 
 	    byte[] appKeyByte = IOUtils.toByteArray(new FileInputStream(appKey));
 
 	    this.deviceId = deviceId;
 
 	    spConfig = initSPConfig(appKeyByte);
-
-	    switch(audioEngine){
-		case JAVAAUDIO:
-		    audioListener = new AudioPlayer(this);
-		    break;
-		case OPENALAUDIO:
-		    audioListener = new OpenALPlayer(this);
-		    break;
-		default:
-		    log.error("Audio engine not known");
-		    throw new Exception("Audio engine not known");
-	    }
-	    
-	    
 
 	    registerConnectionCallbacks();
 	    registerPlaybackCallbacks();
@@ -180,11 +222,36 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		}
 	    }));
 
+	    try {
+		initAudioEngine(aMixerId);
+	    } catch (Exception ex) {
+		log.warn("Error initializing audio engine: " + ex.getMessage());
+	    }
+
 	    instance = this;
 
 	} catch (Exception e) {
 	    log.error("General error", e);
 	    throw new IllegalArgumentException("general error", e);
+	}
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    private void initAudioEngine(int mixerId) throws Exception {
+	System.out.println("Audio engine: " + audioEngine);
+	switch (audioEngine) {
+	    case JAVAAUDIO:
+		audioListener = new JavaAudioPlayer(this, mixerId);
+		break;
+	    case OPENALAUDIO:
+		audioListener = new OpenALAudioPlayer(this, mixerId);
+		break;
+	    default:
+		log.error("Audio engine not known");
+		throw new Exception("Audio engine not known");
 	}
     }
 
@@ -287,7 +354,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 			return 0;
 		    }
 		    num_samples -= (num_samples % AudioListener.CHANNELS);
-		    int i = audioListener.onAudioData(samples.getByteArray(0, num_samples * AudioListener.SAMPLESIZE));
+		    int i = audioListener.onAudioData(samples.getByteArray(0, num_samples * AudioListener.SAMPLESIZE), num_samples);
 		    return i / AudioListener.SAMPLESIZE;
 		} catch (Exception e) {
 		    log.error("spotifyLib audio data error", e);
@@ -626,19 +693,6 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
     }
 
     @Override
-    public Mixer.Info getMixer() {
-	return mixer;
-    }
-
-    @Override
-    public void setMixer(Mixer.Info mixer) {
-	if (!AudioSystem.getMixer(mixer).isLineSupported(AudioListener.DATALINE)) {
-	    throw new IllegalArgumentException("Mixer does not support PCM");
-	}
-	this.mixer = mixer;
-    }
-
-    @Override
     public void addAuthenticationListener(AuthenticationListener authenticationListener) {
 	authenticationListeners.add(authenticationListener);
     }
@@ -663,21 +717,4 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 	this.bitrate = bitrate;
     }
 
-    /**
-     * Mixer id from launch parameters
-     * @param mixerId Mixer id from launch parameters
-     */
-    @Override
-    public void setMixerId(int mixerId) {
-	mixerId = mixerId;
-    }
-
-    /**
-     * Mixer id from launch parameters
-     * @return Mixer id from launch parameters
-     */
-    @Override
-    public int getMixerId() {
-	return mixerId;
-    }
 }

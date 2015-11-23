@@ -28,14 +28,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+
 import com.shuffle.scplayer.core.AudioEngine;
 import static com.shuffle.scplayer.core.AudioEngine.JAVAAUDIO;
-import com.shuffle.scplayer.core.AudioListener;
 import com.shuffle.scplayer.core.AuthenticationListener;
+import com.shuffle.scplayer.core.JavaAudioPlayer;
 import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
+
 import org.urish.openal.ALException;
 import org.urish.openal.Device;
 import org.urish.openal.jna.ALFactory;
@@ -43,7 +45,7 @@ import org.urish.openal.jna.ALFactory;
 public class SCPlayerMain {
 
     private static final transient Log log = LogFactory.getLog(SCPlayerMain.class);
-    public static final Map<Integer, Level> logLevel = new HashMap<Integer, Level>();
+    public static final Map<Integer, Level> logLevel = new HashMap();
     private static final Map<Integer, Integer> mapBitrate = new HashMap<>();
     private static final transient Gson gson = new GsonBuilder().create();
     private static final File credentials = new File("./credentials.json");
@@ -57,7 +59,7 @@ public class SCPlayerMain {
     /**
      *
      */
-    private static AudioEngine audioEngine = AudioEngine.OPENALAUDIO;
+    private static final AudioEngine audioEngine = AudioEngine.JAVAAUDIO;
 
     static {
 	logLevel.put(0, Level.WARN);
@@ -94,10 +96,12 @@ public class SCPlayerMain {
 	    System.exit(-1);
 	}
 
+	
+	
 	if (Boolean.getBoolean("list.mixers")) {
 	    switch (audioEngine) {
 		case OPENALAUDIO:
-		    System.out.println("Mixers availables");
+		    System.out.println("Mixers availables (OpenAL)");
 		    System.out.println("Choose your mixer and set -Dmixer=%index%");
 		    System.out.println("Index - Name");
 		    try {
@@ -111,7 +115,7 @@ public class SCPlayerMain {
 		    }
 		    break;
 		case JAVAAUDIO:
-		    System.out.println("Mixers availables");
+		    System.out.println("Mixers availables (Java audio)");
 		    System.out.println("Choose your mixer and set -Dmixer=%index%");
 		    System.out.println("Index - Name - Description - Version");
 		    Mixer.Info[] mixers = AudioSystem.getMixerInfo();
@@ -119,18 +123,18 @@ public class SCPlayerMain {
 			Mixer.Info mixerInfo = mixers[i];
 			System.out.println(i + " - " + mixerInfo.getName() + " - " + mixerInfo.getDescription() + " - "
 				+ mixerInfo.getVersion()
-				+ (AudioSystem.getMixer(mixerInfo).isLineSupported(AudioListener.DATALINE)
-					? " - Support PCM Audio" : ""));
+			+ (AudioSystem.getMixer(mixerInfo).isLineSupported(JavaAudioPlayer.DATALINE)		? " - Support PCM Audio" : ""));
 		    }
 		    break;
 		default:
 		    System.out.println("Audio engine not defined");
 	    }
 	}
-
-	final SpotifyConnectPlayer player = new SpotifyConnectPlayerImpl(appKey, deviceId);
-
-	player.setAudioEngine(audioEngine);
+	
+	//Setting mixer with -Dmixer or 0
+	int mixerInt = 	new Integer(System.getProperty("mixer", "0"));
+	
+	final SpotifyConnectPlayer player = new SpotifyConnectPlayerImpl(appKey, deviceId, audioEngine, mixerInt);
 
 	player.addAuthenticationListener(new AuthenticationListener() {
 
@@ -188,28 +192,8 @@ public class SCPlayerMain {
 
 	player.setPlayerName(playerName);
 
-	//Setting mixer with -Dmixer or 0
-	String mixerString = System.getProperty("mixer", "0");
-
-	if (mixerString != null && !"".equalsIgnoreCase(mixerString)) {
-	    player.setMixerId(new Integer(mixerString));
-	    if (audioEngine == JAVAAUDIO) {
-		Mixer.Info[] mixers = AudioSystem.getMixerInfo();
-		Mixer.Info mixer = mixers[0];
-		try {
-		    int mixerInt = new Integer(mixerString);
-		    mixer = mixerInt < mixers.length ? mixers[mixerInt] : mixers[0];
-		} catch (NumberFormatException e) {
-		    for (int i = 0; i < mixers.length; i++) {
-			if (mixers[i].getName().equals(mixerString)) {
-			    mixer = mixers[i];
-			}
-		    }
-		}
-		player.setMixer(mixer);
-	    }
-	}
-
+		    
+	
     }
 
     private static void initLogger() {
