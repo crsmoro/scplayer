@@ -1,22 +1,19 @@
 package com.shuffle.scplayer.core;
 
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.SourceDataLine;
 
 /**
  * @author crsmoro
  * @author LeanderK
- * @version 1.0
+ * @author Tokazio
+ * @version 1.1
  */
 public interface AudioListener {
     int RATE = 44100;
     int CHANNELS = 2;
-    int SAMPLESIZE = 2;
+    int SAMPLESIZE = 16/8;//16bit
     
     AudioFormat PCM = new AudioFormat(RATE, 16, CHANNELS, true, false);
-    
-    DataLine.Info DATALINE = new DataLine.Info(SourceDataLine.class, PCM);
 
     void onActive();
 
@@ -30,9 +27,11 @@ public interface AudioListener {
 
     void onAudioFlush();
 
-    int onAudioData(byte[] data);
+    int onAudioData(byte[] data, int numSamples);
 
-    void onVolumeChanged(short volume);
+    void onVolumeChanged(int volume);
 
     void close();
+    
+    void open(int aMixerId);
 }
