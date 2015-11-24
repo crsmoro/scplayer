@@ -134,7 +134,7 @@ public class OpenALAudioPlayer implements AudioListener {
 	    source = openal.createSource();
 	    //Stream
 	    try {
-		stream = source.createOutputStream(PCM, 32, 8192);
+		stream = source.createOutputStream(PCM, 4, 1024);
 		this.active = true;
 		onVolumeChanged(player.getVolume());
 	    } catch (ALException ex) {
