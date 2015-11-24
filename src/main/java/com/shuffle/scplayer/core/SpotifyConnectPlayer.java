@@ -1,11 +1,10 @@
 package com.shuffle.scplayer.core;
 
-import javax.sound.sampled.Mixer;
-
 /**
  * @author crsmoro
  * @author LeanderK
- * @version 1.0
+ * @author Tokazio
+ * @version 1.1
  */
 public interface SpotifyConnectPlayer {
     Track getPlayingTrack();
@@ -61,11 +60,7 @@ public interface SpotifyConnectPlayer {
     AudioListener getAudioListener();
 
     void setAudioListener(AudioListener audioListener);
-    
-    Mixer.Info getMixer();
-    
-    void setMixer(Mixer.Info mixer);
-    
+        
     void addAuthenticationListener(AuthenticationListener authenticationListener);
 
     void removeAuthenticationListener(AuthenticationListener authenticationListener);
@@ -75,4 +70,5 @@ public interface SpotifyConnectPlayer {
     void setBitrate(int bitrate);
     
     int getBitrate();
+
 }

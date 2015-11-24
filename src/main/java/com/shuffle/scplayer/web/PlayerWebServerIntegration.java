@@ -182,7 +182,7 @@ public class PlayerWebServerIntegration implements PlayerListener, Authenticatio
     }
 
     @Override
-    public void onVolumeChanged(short volume) {
+    public void onVolumeChanged(int volume) {
         webServer.sendMessage(gson.toJson(new WebSocketObject("volume", volume)));
     }
 
