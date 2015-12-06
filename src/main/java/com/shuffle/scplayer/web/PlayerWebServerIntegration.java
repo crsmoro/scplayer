@@ -2,6 +2,7 @@ package com.shuffle.scplayer.web;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.shuffle.scplayer.core.AuthenticationListener;
 import com.shuffle.scplayer.core.PlayerListener;
 import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 import com.shuffle.scplayer.core.Track;
@@ -11,20 +12,20 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * @author LeanderK
- * @version 1.0
- */
-public class PlayerWebServerIntegration implements PlayerListener {
+public class PlayerWebServerIntegration implements PlayerListener, AuthenticationListener {
 
     private static final transient Log log = LogFactory.getLog(PlayerWebServerIntegration.class);
 
     private WebServer webServer;
 
     private final transient Gson gson = new GsonBuilder().create();
-
+    
     public PlayerWebServerIntegration(final SpotifyConnectPlayer spotifyConnectPlayer) {
-        final WebServer webServer = new WebServer(4000) {
+    	this(spotifyConnectPlayer, 4000);
+    }
+
+    public PlayerWebServerIntegration(final SpotifyConnectPlayer spotifyConnectPlayer, int port) {
+        final WebServer webServer = new WebServer(port) {
 
             @Override
             protected void onMessage(String message, com.shuffle.scplayer.web.WebSocket webSocket) {
@@ -90,6 +91,9 @@ public class PlayerWebServerIntegration implements PlayerListener {
                             break;
                         case "getPlayerName":
                             webSocket.send(gson.toJson(new WebSocketObject("playername", spotifyConnectPlayer.getPlayerName())).getBytes("UTF-8"));
+                            break;
+                        case "getSeek":
+                            webSocket.send(gson.toJson(new WebSocketObject("seek", spotifyConnectPlayer.getSeek())).getBytes("UTF-8"));
                             break;
                     }
                 }
@@ -182,12 +186,22 @@ public class PlayerWebServerIntegration implements PlayerListener {
     }
 
     @Override
-    public void onLoggedIn() {
+    public void onLoggedIn(String username) {
         webServer.sendMessage(gson.toJson(new WebSocketObject("logged", true)));
     }
 
     @Override
-    public void onLoggedOut() {
+    public void onLoggedOut(String username) {
         webServer.sendMessage(gson.toJson(new WebSocketObject("logged", false)));
     }
+
+	@Override
+	public void onNewCredentials(String username, String blob) {
+		
+	}
+
+	@Override
+	public void onPlayerNameChanged(String playerName) {
+		
+	}
 }
