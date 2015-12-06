@@ -27,8 +27,10 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.shuffle.scplayer.core.AudioListener;
 import com.shuffle.scplayer.core.AuthenticationListener;
+import com.shuffle.scplayer.core.PlayerListener;
 import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
+import com.shuffle.scplayer.core.Track;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
 
@@ -44,7 +46,7 @@ public class SCPlayerMain {
 	private static String playerName;
 	private static String deviceId = UUID.randomUUID().toString();
 	private static boolean rememberMe;
-
+	private static JsonObject credentialsJson; 
 	static {
 		logLevel.put(0, Level.WARN);
 		logLevel.put(1, Level.INFO);
@@ -139,6 +141,89 @@ public class SCPlayerMain {
 
 			}
 		});
+		
+		player.addPlayerListener(new PlayerListener() {
+			
+			@Override
+			public void onVolumeChanged(short volume) {
+				
+			}
+			
+			@Override
+			public void onTrackChanged(Track track) {
+				
+			}
+			
+			@Override
+			public void onTokenLost() {
+				
+			}
+			
+			@Override
+			public void onShuffle(boolean enabled) {
+				
+			}
+			
+			@Override
+			public void onSeek(int millis) {
+				
+			}
+			
+			@Override
+			public void onRepeat(boolean enabled) {
+				
+			}
+			
+			@Override
+			public void onPreviousTrack(Track track) {
+				
+			}
+			
+			@Override
+			public void onPlayerNameChanged(String playerName) {
+				log.trace("remember : " + rememberMe);
+				if (rememberMe) {
+					try {
+						if (credentialsJson == null) {
+							log.debug("Credentials file not exists");
+							return;
+						}
+						credentialsJson.remove("playerName");
+						credentialsJson.addProperty("playerName", playerName);
+						FileWriter fileWriter = new FileWriter(credentials);
+						fileWriter.write(gson.toJson(credentialsJson));
+						fileWriter.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			@Override
+			public void onPlay() {
+				
+			}
+			
+			@Override
+			public void onPause() {
+				
+			}
+			
+			@Override
+			public void onNextTrack(Track track) {
+				
+			}
+			
+			@Override
+			public void onInactive() {
+				
+			}
+			
+			@Override
+			public void onActive() {
+				
+			}
+		});
 
 		if (!standalone) {
 			PlayerWebServerIntegration webServerIntegration = new PlayerWebServerIntegration(player, webPort);
@@ -174,6 +259,36 @@ public class SCPlayerMain {
 
 	}
 
+	private static void verifyCredentialFile(File credentials) throws IOException, IllegalArgumentException {
+		if (!credentials.exists()) {
+			log.debug("Credentials file not exists");
+			return;
+		}
+		try {
+			log.debug("Reading credentials JSON file");
+			JsonElement credentialsContent = new JsonParser().parse(new FileReader(credentials));
+			if (credentialsContent != null && credentialsContent.isJsonObject()) {
+				log.debug("Valid JSON");
+				credentialsJson = credentialsContent.getAsJsonObject();
+				if (credentialsJson != null) {
+					log.debug("Reading data");
+					username = credentialsJson.get("username").getAsString();
+					log.trace("Username : " + username);
+					blob = credentialsJson.get("blob").getAsString();
+					log.trace("Blob : " + blob);
+					playerName = credentialsJson.get("playerName").getAsString();
+					log.trace("PlayerName : " + playerName);
+					deviceId = credentialsJson.get("deviceId").getAsString();
+					log.trace("deviceId : " + deviceId);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			log.error("Credentials file not found", e);
+		} catch (JsonParseException e) {
+			log.error("Invalid credentials file", e);
+		}
+	}
+	
 	private static void initLogger() {
 		// This is the root logger provided by log4j
 		Logger rootLogger = Logger.getRootLogger();
@@ -195,36 +310,6 @@ public class SCPlayerMain {
 		} catch (IOException e) {
 			System.out.println("Failed to add appender !!");
 			System.exit(-1);
-		}
-	}
-
-	private static void verifyCredentialFile(File credentials) throws IOException, IllegalArgumentException {
-		if (!credentials.exists()) {
-			log.debug("Credentials file not exists");
-			return;
-		}
-		try {
-			log.debug("Reading credentials JSON file");
-			JsonElement credentialsContent = new JsonParser().parse(new FileReader(credentials));
-			if (credentialsContent != null && credentialsContent.isJsonObject()) {
-				log.debug("Valid JSON");
-				JsonObject credentialsJson = credentialsContent.getAsJsonObject();
-				if (credentialsJson != null) {
-					log.debug("Reading data");
-					username = credentialsJson.get("username").getAsString();
-					log.trace("Username : " + username);
-					blob = credentialsJson.get("blob").getAsString();
-					log.trace("Blob : " + blob);
-					playerName = credentialsJson.get("playerName").getAsString();
-					log.trace("PlayerName : " + playerName);
-					deviceId = credentialsJson.get("deviceId").getAsString();
-					log.trace("deviceId : " + deviceId);
-				}
-			}
-		} catch (FileNotFoundException e) {
-			log.error("Credentials file not found", e);
-		} catch (JsonParseException e) {
-			log.error("Invalid credentials file", e);
 		}
 	}
 

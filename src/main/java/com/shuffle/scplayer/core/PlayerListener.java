@@ -1,9 +1,5 @@
 package com.shuffle.scplayer.core;
 
-/**
- * @author LeanderK
- * @version 1.0
- */
 public interface PlayerListener {
     void onPlay();
 
@@ -28,4 +24,6 @@ public interface PlayerListener {
     void onTokenLost();
 
     void onVolumeChanged(short volume);
+    
+    void onPlayerNameChanged(String playerName);
 }

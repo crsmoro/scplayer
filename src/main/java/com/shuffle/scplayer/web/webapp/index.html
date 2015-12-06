@@ -13,35 +13,36 @@
 <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
 <script type="text/javascript" src="js/bootstrap.min.js"></script>
 <script type="text/javascript" src="js/bootstrap-slider.min.js"></script>
+<script type="text/javascript" src="js/juration.min.js"></script>
 </head>
 
 <body>
 
 	<div class="row">
-		<div class="col-lg-offset-3 col-lg-6">
+		<div class="col-lg-offset-3 col-lg-6 col-md-12">
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h3 class="panel-title" style="min-height: 20px;">
-						<div class="col-lg-10">
+						<div class="col-xs-10">
 							SCPlayer<span id="titleplaying"></span>
 						</div>
-						<div class="col-lg-2 text-right">
+						<div class="col-xs-2 text-right">
 							<a id="alogin" href="#loginmodal" data-toggle="modal">Login</a> <a href="#" id="alogout">Logout</a>
 						</div>
 					</h3>
 				</div>
 				<div class="panel-body">
-					<div class="col-lg-3">
+					<div class="col-xs-12 col-sm-3">
 						<img id="imgalbumcover" class="img-thumbnail center-block">
 					</div>
-					<div class="col-lg-9">
+					<div class="col-xs-12 col-sm-9">
 						<div class="row">
-							<div class="col-lg-8">
+							<div class="col-xs-12 col-sm-8">
 								<p id="track">Track</p>
 								<p id="artist">Artist</p>
 								<p id="album">Album</p>
 							</div>
-							<div class="col-lg-4">
+							<div class="col-xs-12 col-sm-4">
 								<div class="text-center">
 									<i style="font-size: 2.0em;"
 										class="glyphicon glyphicon-volume-up"></i>
@@ -51,8 +52,8 @@
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-lg-5">
-								<div class="btn-group" role="group" aria-label="Controls">
+							<div class="col-xs-12">
+								<div class="btn-group" role="group" aria-label="Controls" style="margin-bottom:5px;">
 									<button id="btnPrev" type="button" class="btn btn-default">
 										<i class="glyphicon glyphicon-step-backward"></i> Prev
 									</button>
@@ -63,9 +64,8 @@
 										<i class="glyphicon glyphicon-step-forward"></i> Next
 									</button>
 								</div>
-							</div>
-							<div class="col-lg-4">
-								<div class="btn-group" role="group" aria-label="Controls">
+								&nbsp;
+								<div class="btn-group" role="group" aria-label="Controls" style="margin-bottom:5px;">
 									<button id="btnRepeat" type="button"
 										class="btn btn-success active">
 										<i class="glyphicon glyphicon-repeat"></i> Repeat
@@ -77,9 +77,11 @@
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-lg-12" style="padding-top: 15px;">
-								<input type="text" style="width: 100%;" value="0" id="seekbar"
-									data-slider-min="0" data-slider-max="0" data-slider-step="1" />
+							<div class="col-xs-3 text-center" style="padding-top: 20px;">
+								<div id="curseek">0:00 / 0:00</div>
+							</div>
+							<div class="col-xs-9" style="padding-top: 15px;">
+								<input type="text" style="width: 100%;" value="0" id="seekbar" data-slider-min="0" data-slider-max="0" data-slider-step="1" />
 							</div>
 						</div>
 					</div>
@@ -153,6 +155,7 @@
 	var shuffle = false;
 	var repeat = false;
 	var currentSeek;
+	var currentTrack;
 	var seekTimeout;
 	var websocket;
 	
@@ -251,6 +254,9 @@
 		websocket.send(JSON.stringify({
 			action : 'isLoggedIn'
 		}));
+		websocket.send(JSON.stringify({
+			action : 'getSeek'
+		}));
 	}
 
 	function initWebSocket() {
@@ -336,6 +342,7 @@
 
 	function trackChanged(track) {
 		if (track) {
+			currentTrack = track;
 			$('#track').html('Track : ' + track.name);
 			$('#artist').html('Artist : ' + track.artist);
 			$('#album').html('Album : ' + track.album);
@@ -408,6 +415,7 @@
 
 	function onSeek(seek) {
 		currentSeek = parseInt(seek / 1000);
+		$('#curseek').html(juration.stringify(currentSeek, { format: 'chrono' }) + ' / ' + juration.stringify(currentTrack ? (currentTrack.duration / 1000) : 0, { format: 'chrono' }));
 		$('#seekbar').slider('setValue', currentSeek);
 	}
 
@@ -423,23 +431,34 @@
 
 	$('#seekbar').slider({
 		formater : function(value) {
-			return value + ' Seconds';
+			return juration.stringify(value, { format: 'chrono' });
 		}
 	});
+	
+	var manualSlide = false;
+	$('#seekbar').on('slideStart', function() {
+		manualSlide = true;
+	});
 
-	$('#seekbar').on('slideStop', function() {
-		var seconds = $('#seekbar').slider().val();
-		websocket.send(JSON.stringify({
-			action : 'seek',
-			data : (seconds * 1000)
-		}));
+	$('#seekbar').on('slideStop', function(event, ui) {
+		setTimeout(function() {
+			var seconds = $('#seekbar').slider().val();
+			websocket.send(JSON.stringify({
+				action : 'seek',
+				data : (seconds * 1000)
+			}));
+			manualSlide = false;
+		}, 300);
 	});
 
 	function runSeekbar() {
 		seekTimeout = setTimeout(function() {
 			if (playing) {
 				currentSeek++;
-				onSeek(currentSeek * 1000);
+				console.log('manual slide?' + manualSlide);
+				if (!manualSlide) {
+					onSeek(currentSeek * 1000);
+				}
 			}
 			runSeekbar();
 		}, 1000);

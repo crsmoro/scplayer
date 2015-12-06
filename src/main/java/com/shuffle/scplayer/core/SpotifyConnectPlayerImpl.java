@@ -57,6 +57,27 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 	private AudioListener audioListener;
 	private Mixer.Info mixer;
 	private int pumpEventsDelay = 100;
+	private boolean playing = false;
+	private int seek = 0;
+	private Thread seekThread = new Thread(new Runnable() {
+		
+		@Override
+		public void run() {
+			log.trace("start seekThread");
+			while (!seekThreadStop) {
+				try {
+					Thread.sleep(500);
+					if (playing) {
+						seek += 500;
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			log.trace("finish seekThread");
+		}
+	});
+	private boolean seekThreadStop = false;
 
 	private final Lock libLock = new ReentrantLock();
 	private final SpotifyLibrary spotifyLib;
@@ -132,6 +153,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 				}
 			});
 			threadPumpEvents.start();
+			seekThread.start();
 
 			spotifyLib.SpPlaybackSetBitrate(getBitrate());
 
@@ -188,15 +210,18 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 						playerListener.onPlay();
 					}
 					audioListener.onPlay();
+					playing = true;
 				} else if (notification == SpPlaybackNotify.kSpPlaybackNotifyPause) {
 					for (PlayerListener playerListener : playerListeners) {
 						playerListener.onPause();
 					}
 					audioListener.onPause();
+					playing = false;
 				} else if (notification == SpPlaybackNotify.kSpPlaybackNotifyTrackChanged) {
 					for (PlayerListener playerListener : playerListeners) {
 						playerListener.onTrackChanged(getPlayingTrack());
 					}
+					seek = 0;
 				} else if (notification == SpPlaybackNotify.kSpPlaybackNotifyNext) {
 					for (PlayerListener playerListener : playerListeners) {
 						playerListener.onNextTrack(getPlayingTrack());
@@ -262,6 +287,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 				for (PlayerListener playerListener : playerListeners) {
 					playerListener.onSeek(millis);
 				}
+				seek = millis;
 			}
 		};
 		spPlaybackCallbacks.apply_volume = new SpPlaybackCallbacks.apply_volume_callback() {
@@ -371,7 +397,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
 	@Override
 	public int getSeek() {
-		throw new UnsupportedOperationException("not implemented");
+		return seek;
 	}
 
 	@Override
@@ -413,7 +439,12 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		spConfig.remoteName = NativeUtils.pointerFrom(playerName);
 		try {
 			libLock.lock();
-			spotifyLib.SpSetDisplayName(playerName);
+			int ret = spotifyLib.SpSetDisplayName(playerName);
+			if (ret == SpError.kSpErrorOk) {
+				for (PlayerListener playerListener : playerListeners) {
+					playerListener.onPlayerNameChanged(playerName);
+				}
+			}
 		} finally {
 			libLock.unlock();
 		}
@@ -464,6 +495,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		try {
 			libLock.lock();
 			spotifyLib.SpPlaybackSeek(millis);
+			seek = millis;
 		} finally {
 			libLock.unlock();
 		}
@@ -553,6 +585,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
 	@Override
 	public void close() {
+		seekThreadStop = true;
 		threadPumpEventsStop = true;
 		try {
 			libLock.lock();

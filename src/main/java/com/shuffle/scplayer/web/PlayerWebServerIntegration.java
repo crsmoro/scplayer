@@ -12,10 +12,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * @author LeanderK
- * @version 1.0
- */
 public class PlayerWebServerIntegration implements PlayerListener, AuthenticationListener {
 
     private static final transient Log log = LogFactory.getLog(PlayerWebServerIntegration.class);
@@ -95,6 +91,9 @@ public class PlayerWebServerIntegration implements PlayerListener, Authenticatio
                             break;
                         case "getPlayerName":
                             webSocket.send(gson.toJson(new WebSocketObject("playername", spotifyConnectPlayer.getPlayerName())).getBytes("UTF-8"));
+                            break;
+                        case "getSeek":
+                            webSocket.send(gson.toJson(new WebSocketObject("seek", spotifyConnectPlayer.getSeek())).getBytes("UTF-8"));
                             break;
                     }
                 }
@@ -198,6 +197,11 @@ public class PlayerWebServerIntegration implements PlayerListener, Authenticatio
 
 	@Override
 	public void onNewCredentials(String username, String blob) {
+		
+	}
+
+	@Override
+	public void onPlayerNameChanged(String playerName) {
 		
 	}
 }
