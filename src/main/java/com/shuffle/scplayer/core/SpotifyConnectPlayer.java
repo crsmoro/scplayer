@@ -1,5 +1,7 @@
 package com.shuffle.scplayer.core;
 
+import com.shuffle.scplayer.jna.SpZeroConfVars;
+
 import javax.sound.sampled.Mixer;
 
 /**
@@ -43,8 +45,10 @@ public interface SpotifyConnectPlayer {
     void volume(short volume);
 
     void login(String username, String password);
-    
+
     void loginBlob(String username, String blob);
+
+    String getUsername();
 
     void logout();
 
@@ -75,4 +79,6 @@ public interface SpotifyConnectPlayer {
     void setBitrate(int bitrate);
     
     int getBitrate();
+
+    
 }

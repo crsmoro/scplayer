@@ -553,6 +553,10 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		}
 	}
 
+	@Override 
+	public String getUsername() {
+		return username;
+	}
 	@Override
 	public void logout() {
 		try {

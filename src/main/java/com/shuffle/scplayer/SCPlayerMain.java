@@ -33,6 +33,7 @@ import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
 import com.shuffle.scplayer.core.Track;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
+import com.shuffle.scplayer.core.SpotifyConnectZeroConf;
 
 public class SCPlayerMain {
 	private static final transient Log log = LogFactory.getLog(SCPlayerMain.class);
@@ -58,7 +59,7 @@ public class SCPlayerMain {
 		mapBitrate.put(320, SpBitrate.kSpBitrate320k);
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws Exception {
 		initLogger();
 		
 		Integer debug = Integer.getInteger("debug", 0);
@@ -77,7 +78,6 @@ public class SCPlayerMain {
 		
 		File appKey = new File(appKeyLocation);
 		
-
 		if (!appKey.exists()) {
 			log.error("appkey not found");
 			System.exit(-1);
@@ -231,14 +231,19 @@ public class SCPlayerMain {
 		}
 		
 		player.setBitrate(mapBitrate.get(bitrate) != null ? mapBitrate.get(bitrate) : SpBitrate.kSpBitrate320k);
-		
+
 		if (username != null && !"".equalsIgnoreCase(username) && password != null && !"".equalsIgnoreCase(password)) {
 			player.login(username, password);
+
 		} else if (username != null && !"".equalsIgnoreCase(username) && blob != null && !"".equalsIgnoreCase(blob)) {
 			player.loginBlob(username, blob);
 		}
 
 		player.setPlayerName(playerName);
+
+		// starting zeroconf service
+		SpotifyConnectZeroConf zeroConf = new SpotifyConnectZeroConf(player);
+		zeroConf.runServer();
 
 		String mixerString = System.getProperty("mixer", "0");
 		if (mixerString != null && !"".equalsIgnoreCase(mixerString)) {
