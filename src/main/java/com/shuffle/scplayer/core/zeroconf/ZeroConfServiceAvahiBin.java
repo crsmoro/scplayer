@@ -3,10 +3,14 @@ package com.shuffle.scplayer.core.zeroconf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.security.KeyPair;
+import java.util.HashMap;
+import java.util.Map;
+
 /* Zeroconf service implementation based on avahi-publish util */
 public class ZeroConfServiceAvahiBin implements ZeroConfService{
     private static final transient Log log = LogFactory.getLog(ZeroConfServiceAvahiBin.class);
-    @Override
+
     public void publishService(String name, String type, int port, String text) {
         Thread avahi = new Thread(new Runnable() {
             @Override
@@ -21,5 +25,14 @@ public class ZeroConfServiceAvahiBin implements ZeroConfService{
         });
         avahi.setDaemon(true);
         avahi.start();
+    }
+
+    @Override
+    public void publishService(String name, String type, int port, HashMap<String, String> values) {
+        String txt = "";
+        for(Map.Entry<String, String> value : values.entrySet()) {
+            txt+=value.getKey()+"="+value.getValue()+" ";
+        }
+        publishService(name, type, port, txt.substring(0, txt.length()-1));
     }
 }

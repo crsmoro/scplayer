@@ -87,7 +87,9 @@ public class SpotifyZeroConfServer extends NanoHTTPD {
         });
         server.setDaemon(true);
         server.start();
-
-		zeroConfService.publishService("scplayer", "_spotify-connect._tcp", 4001, "VERSION=1.0 CPath=/");
+		HashMap<String, String> values = new HashMap<>();
+		values.put("VERSION","1.0");
+		values.put("CPath","/");
+		zeroConfService.publishService("scplayer", "_spotify-connect._tcp", 4001, values);
 	}
 }

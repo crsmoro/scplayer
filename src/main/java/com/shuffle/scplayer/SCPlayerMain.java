@@ -12,9 +12,7 @@ import java.util.UUID;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 
-import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfProviderFactory;
-import com.shuffle.scplayer.core.zeroconf.ZeroConfService;
-import com.shuffle.scplayer.core.zeroconf.ZeroConfServiceAvahiBin;
+import com.shuffle.scplayer.core.zeroconf.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -36,7 +34,6 @@ import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
 import com.shuffle.scplayer.core.Track;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
-import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfServer;
 
 public class SCPlayerMain {
 	private static final transient Log log = LogFactory.getLog(SCPlayerMain.class);
