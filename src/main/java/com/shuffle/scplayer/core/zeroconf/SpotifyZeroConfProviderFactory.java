@@ -5,7 +5,7 @@ import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 public class SpotifyZeroConfProviderFactory {
     public SpotifyZeroConfProvider create(String implementation, SpotifyConnectPlayer player) {
         if (implementation.toLowerCase().equals("library")) {
-            return new SpotifyZeroConfProviderLib();
+            return new SpotifyZeroConfProviderLib(player);
         } else if (implementation.toLowerCase().equals("opensource")) {
             return new SpotifyZeroConfProviderOS(player);
         }

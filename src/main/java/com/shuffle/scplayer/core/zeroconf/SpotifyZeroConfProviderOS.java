@@ -60,7 +60,7 @@ public class SpotifyZeroConfProviderOS implements SpotifyZeroConfProvider {
         String publicKey = Base64.getEncoder().encodeToString(publicKeyByte);
 
         return new SpotifyZeroConfVars(publicKey, player.getDeviceId(), player.getUsername(),
-                player.getPlayerName(), "PREMIUM", SpotifyLibrary.SpDeviceType.kSpDeviceTypeAudioDongle);
+                player.getPlayerName(), "PREMIUM", String.valueOf(SpotifyLibrary.SpDeviceType.kSpDeviceTypeAudioDongle), "0.1.0");
     }
 
     @Override

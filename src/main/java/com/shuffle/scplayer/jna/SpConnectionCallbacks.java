@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class SpConnectionCallbacks extends Structure {
 	/** C type : notify_callback* */
-	public com.shuffle.scplayer.jna.SpPlaybackCallbacks.notify_callback notify$;
+	public SpPlaybackCallbacks.notify_callback notify$;
 	/** C type : new_credentials_callback* */
 	public SpConnectionCallbacks.new_credentials_callback new_credentials;
 	public interface notify_callback extends Callback {
@@ -30,7 +30,7 @@ public class SpConnectionCallbacks extends Structure {
 	 * @param notify$ C type : notify_callback*<br>
 	 * @param new_credentials C type : new_credentials_callback*
 	 */
-	public SpConnectionCallbacks(com.shuffle.scplayer.jna.SpPlaybackCallbacks.notify_callback notify$, SpConnectionCallbacks.new_credentials_callback new_credentials) {
+	public SpConnectionCallbacks(SpPlaybackCallbacks.notify_callback notify$, SpConnectionCallbacks.new_credentials_callback new_credentials) {
 		super();
 		this.notify$ = notify$;
 		this.new_credentials = new_credentials;

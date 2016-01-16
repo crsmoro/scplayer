@@ -57,7 +57,7 @@ public class SpotifyZeroConfServer extends NanoHTTPD {
 		result.addProperty("activeUser", vars.getActiveUser());
 		result.addProperty("publicKey", vars.getPublicKey());
 		result.addProperty("deviceType", vars.getDeviceType());
-		result.addProperty("libraryVersion", "0.1.0");
+		result.addProperty("libraryVersion", vars.getLibraryVersion());
 		result.addProperty("accountReq", vars.getAccountReq());
 		return new Response(Response.Status.OK, "application/json", gson.toJson(result));
 	}

@@ -13,18 +13,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 
+import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfVars;
+import com.shuffle.scplayer.jna.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.shuffle.scplayer.jna.SpConfig;
-import com.shuffle.scplayer.jna.SpConnectionCallbacks;
-import com.shuffle.scplayer.jna.SpDebugCallbacks;
-import com.shuffle.scplayer.jna.SpMetadata;
-import com.shuffle.scplayer.jna.SpPlaybackCallbacks;
-import com.shuffle.scplayer.jna.SpSampleFormat;
-import com.shuffle.scplayer.jna.SpotifyLibrary;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpConnectionNotify;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpDeviceType;
@@ -319,9 +314,9 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 		Pointer pointerAppKey = NativeUtils.pointerFrom(appKeyByte);
 
 		spConfig.buffer = pointerBlank;
-		spConfig.buffer_size = new NativeLong(1048576, true);
+		spConfig.buffer_size = 1048576;
 		spConfig.app_key = pointerAppKey;
-		spConfig.app_key_size = new NativeLong(appKeyByte.length, true);
+		spConfig.app_key_size = appKeyByte.length;
 		spConfig.deviceId = NativeUtils.pointerFrom(deviceId);
 		spConfig.remoteName = NativeUtils.pointerFrom(playerName);
 		spConfig.brandName = NativeUtils.pointerFrom("DummyBrand");
@@ -505,7 +500,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 	public void shuffle(boolean enabled) {
 		try {
 			libLock.lock();
-			spotifyLib.SpPlaybackEnableShuffle(NativeUtils.fromBoolean(enabled));
+			spotifyLib.SpPlaybackEnableShuffle((byte)NativeUtils.fromBoolean(enabled));
 		} finally {
 			libLock.unlock();
 		}
@@ -515,7 +510,7 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 	public void repeat(boolean enabled) {
 		try {
 			libLock.lock();
-			spotifyLib.SpPlaybackEnableRepeat(NativeUtils.fromBoolean(enabled));
+			spotifyLib.SpPlaybackEnableRepeat((byte)NativeUtils.fromBoolean(enabled));
 		} finally {
 			libLock.unlock();
 		}
@@ -660,5 +655,45 @@ public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 	@Override
 	public void setBitrate(int bitrate) {
 		this.bitrate = bitrate;
+	}
+
+	private String charArrayToString(byte[] array) {
+		StringBuilder sb = new StringBuilder();
+		for(byte b : array) {
+			if(b==0) {
+                break;
+            }
+			sb.append((char)b);
+		}
+		return sb.toString();
+	}
+	@Override
+	public SpotifyZeroConfVars getZeroConfVars() {
+		try {
+			libLock.lock();
+			SpZeroConfVars.ByReference vars = new SpZeroConfVars.ByReference();
+			spotifyLib.SpZeroConfGetVars(vars);
+			return new SpotifyZeroConfVars( charArrayToString(vars.publicKey),
+					charArrayToString(vars.deviceId),
+					charArrayToString(vars.activeUser),
+					charArrayToString(vars.remoteName),
+					charArrayToString(vars.accountReq),
+					charArrayToString(vars.deviceType),
+					charArrayToString(vars.libraryVersion));
+		} finally {
+			libLock.unlock();
+		}
+	}
+
+	@Override
+	public void loginZeroconf(String username, String blob, String clientKey) {
+		try {
+			libLock.lock();
+			this.username = username;
+			spotifyLib.SpConnectionLoginZeroConf(username, blob, clientKey);
+
+		} finally {
+			libLock.unlock();
+		}
 	}
 }

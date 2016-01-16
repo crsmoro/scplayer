@@ -1,5 +1,6 @@
 package com.shuffle.scplayer.core;
 
+import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfVars;
 import com.shuffle.scplayer.jna.SpZeroConfVars;
 
 import javax.sound.sampled.Mixer;
@@ -80,5 +81,8 @@ public interface SpotifyConnectPlayer {
     
     int getBitrate();
 
+    // zeroconf
+    SpotifyZeroConfVars getZeroConfVars();
+    void loginZeroconf(String username, String blob, String clientKey);
     
 }

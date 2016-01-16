@@ -11,31 +11,34 @@ import java.util.List;
 public class SpZeroConfVars extends Structure {
 	/** C type : char[0x96] */
 	public byte[] publicKey = new byte[0x96];
-	/** C type : char[0x40] */
-	public byte[] deviceId = new byte[0x40];
-	/** C type : char[0x40] */
-	public byte[] activeUser = new byte[0x40];
-	/** C type : char[0x40] */
-	public byte[] remoteName = new byte[0x40];
+	/** C type : char[0x41] */
+	public byte[] deviceId = new byte[0x41];
+	/** C type : char[0x41] */
+	public byte[] activeUser = new byte[0x41];
+	/** C type : char[0x41] */
+	public byte[] remoteName = new byte[0x41];
 	/** C type : char[0x10] */
 	public byte[] accountReq = new byte[0x10];
 	/** C type : char[0x10] */
 	public byte[] deviceType = new byte[0x10];
+	/** C type : char[0x1f] */
+	public byte[] libraryVersion = new byte[0x1f];
 	public SpZeroConfVars() {
 		super();
 	}
 	protected List<? > getFieldOrder() {
-		return Arrays.asList("publicKey", "deviceId", "activeUser", "remoteName", "accountReq", "deviceType");
+		return Arrays.asList("publicKey", "deviceId", "activeUser", "remoteName", "accountReq", "deviceType", "libraryVersion");
 	}
 	/**
 	 * @param publicKey C type : char[0x96]<br>
-	 * @param deviceId C type : char[0x40]<br>
-	 * @param activeUser C type : char[0x40]<br>
-	 * @param remoteName C type : char[0x40]<br>
+	 * @param deviceId C type : char[0x41]<br>
+	 * @param activeUser C type : char[0x41]<br>
+	 * @param remoteName C type : char[0x41]<br>
 	 * @param accountReq C type : char[0x10]<br>
-	 * @param deviceType C type : char[0x10]
+	 * @param deviceType C type : char[0x10]<br>
+	 * @param libraryVersion C type : char[0x1f]
 	 */
-	public SpZeroConfVars(byte publicKey[], byte deviceId[], byte activeUser[], byte remoteName[], byte accountReq[], byte deviceType[]) {
+	public SpZeroConfVars(byte publicKey[], byte deviceId[], byte activeUser[], byte remoteName[], byte accountReq[], byte deviceType[], byte libraryVersion[]) {
 		super();
 		if ((publicKey.length != this.publicKey.length)) 
 			throw new IllegalArgumentException("Wrong array size !");
@@ -55,6 +58,9 @@ public class SpZeroConfVars extends Structure {
 		if ((deviceType.length != this.deviceType.length)) 
 			throw new IllegalArgumentException("Wrong array size !");
 		this.deviceType = deviceType;
+		if ((libraryVersion.length != this.libraryVersion.length)) 
+			throw new IllegalArgumentException("Wrong array size !");
+		this.libraryVersion = libraryVersion;
 	}
 	public SpZeroConfVars(Pointer peer) {
 		super(peer);

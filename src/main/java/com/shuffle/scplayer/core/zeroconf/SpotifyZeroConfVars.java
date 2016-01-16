@@ -6,15 +6,19 @@ public class SpotifyZeroConfVars {
     private String activeUser;
     private String remoteName;
     private String accountReq;
-    private int deviceType;
+    private String deviceType;
+    private String libraryVersion;
 
-    public SpotifyZeroConfVars(String publicKey, String deviceId, String activeUser, String remoteName, String accountReq, int deviceType) {
+    public SpotifyZeroConfVars(String publicKey, String deviceId, String activeUser,
+                               String remoteName, String accountReq, String deviceType,
+                               String libraryVersion) {
         this.publicKey = publicKey;
         this.deviceId = deviceId;
         this.activeUser = activeUser;
         this.remoteName = remoteName;
         this.accountReq = accountReq;
         this.deviceType = deviceType;
+        this.libraryVersion = libraryVersion;
     }
 
     public String getPublicKey() {
@@ -37,8 +41,11 @@ public class SpotifyZeroConfVars {
         return accountReq;
     }
 
-    public int getDeviceType() {
+    public String getDeviceType() {
         return deviceType;
     }
 
+    public String getLibraryVersion() {
+        return libraryVersion;
+    }
 }

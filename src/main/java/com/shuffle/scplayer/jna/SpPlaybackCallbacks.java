@@ -19,7 +19,7 @@ public class SpPlaybackCallbacks extends Structure {
 	public SpPlaybackCallbacks.seek_callback seek;
 	/** C type : apply_volume_callback* */
 	public SpPlaybackCallbacks.apply_volume_callback apply_volume;
-	public static interface notify_callback extends Callback {
+	public interface notify_callback extends Callback {
 		void apply(int notification, Pointer userdata);
 	};
 	public interface audio_data_callback extends Callback {
