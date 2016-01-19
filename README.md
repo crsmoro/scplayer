@@ -42,12 +42,13 @@ Troubleshooting
 ----------------
 
 If you are running on Openelec like I am, you have to run this command to enable alsa drivers<br/>
-from ssh type "`echo snd_bcm2835 >> /storage/.config/modules-load.d/audio.conf`"<br/>
+from ssh type `echo snd_bcm2835 >> /storage/.config/modules-load.d/audio.conf`<br/>
 and reboot
 
 If you are running on OSMC you have to run this command to enable alsa drivers<br/>
-from ssh type "`sudo modprobe snd_bcm2835`"<br/>
-no need to reboot
+for older versions from ssh type `sudo modprobe snd_bcm2835` , no need to reboot<br/>
+for newer versions add this line `dtparam=audio=on` to `/boot/config.txt`
+
 
 
 Disclaimer
