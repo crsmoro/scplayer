@@ -2,11 +2,8 @@ package com.shuffle.scplayer.core;
 
 import javax.sound.sampled.Mixer;
 
-/**
- * @author crsmoro
- * @author LeanderK
- * @version 1.0
- */
+import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfVars;
+
 public interface SpotifyConnectPlayer {
     Track getPlayingTrack();
 
@@ -43,8 +40,10 @@ public interface SpotifyConnectPlayer {
     void volume(short volume);
 
     void login(String username, String password);
-    
+
     void loginBlob(String username, String blob);
+
+    String getUsername();
 
     void logout();
 
@@ -61,18 +60,24 @@ public interface SpotifyConnectPlayer {
     AudioListener getAudioListener();
 
     void setAudioListener(AudioListener audioListener);
-    
+
     Mixer.Info getMixer();
-    
+
     void setMixer(Mixer.Info mixer);
-    
+
     void addAuthenticationListener(AuthenticationListener authenticationListener);
 
     void removeAuthenticationListener(AuthenticationListener authenticationListener);
-    
+
     String getDeviceId();
-    
+
     void setBitrate(int bitrate);
-    
+
     int getBitrate();
+
+    // zeroconf
+    SpotifyZeroConfVars getZeroConfVars();
+
+    void loginZeroconf(String username, String blob, String clientKey);
+
 }

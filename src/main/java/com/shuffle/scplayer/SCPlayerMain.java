@@ -12,6 +12,7 @@ import java.util.UUID;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 
+import com.shuffle.scplayer.core.zeroconf.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -45,6 +46,7 @@ public class SCPlayerMain {
 	private static String blob;
 	private static String playerName;
 	private static String deviceId = UUID.randomUUID().toString();
+
 	private static boolean rememberMe;
 	private static JsonObject credentialsJson; 
 	static {
@@ -58,7 +60,7 @@ public class SCPlayerMain {
 		mapBitrate.put(320, SpBitrate.kSpBitrate320k);
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws Exception {
 		initLogger();
 		
 		Integer debug = Integer.getInteger("debug", 0);
@@ -77,7 +79,6 @@ public class SCPlayerMain {
 		
 		File appKey = new File(appKeyLocation);
 		
-
 		if (!appKey.exists()) {
 			log.error("appkey not found");
 			System.exit(-1);
@@ -231,14 +232,22 @@ public class SCPlayerMain {
 		}
 		
 		player.setBitrate(mapBitrate.get(bitrate) != null ? mapBitrate.get(bitrate) : SpBitrate.kSpBitrate320k);
-		
+
 		if (username != null && !"".equalsIgnoreCase(username) && password != null && !"".equalsIgnoreCase(password)) {
 			player.login(username, password);
+
 		} else if (username != null && !"".equalsIgnoreCase(username) && blob != null && !"".equalsIgnoreCase(blob)) {
 			player.loginBlob(username, blob);
 		}
 
 		player.setPlayerName(playerName);
+
+		// starting zeroconf service
+		String zeroConfImpl = System.getProperty("zeroconf","library");
+		ZeroConfService zeroConfService = new ZeroConfServiceAvahiBin();
+		SpotifyZeroConfProviderFactory providerFactory = new SpotifyZeroConfProviderFactory();
+		SpotifyZeroConfServer zeroConf = new SpotifyZeroConfServer(providerFactory.create(zeroConfImpl, player), zeroConfService);
+		zeroConf.runServer();
 
 		String mixerString = System.getProperty("mixer", "0");
 		if (mixerString != null && !"".equalsIgnoreCase(mixerString)) {

@@ -13,7 +13,7 @@ If you managed to run on others devices, or need help to, let me know.
 Quick run / I just want to use
 ---------------
 1. Download Java, <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank">link here</a>
-2. Get apropriate version of spotify lib, you can find all versions on <a href="https://github.com/sashahilton00/spotify-connect-resources" target="_blank">this github</a>, to run in Raspberry Pi 2 is <a href="https://github.com/sashahilton00/spotify-connect-resources/raw/master/armhf%20version/libspotify_embedded_shared.so">this one</a>
+2. Get apropriate version of spotify lib, you can find all versions on <a href="https://github.com/sashahilton00/spotify-connect-resources" target="_blank">this github</a>, to run in Raspberry Pi 2 is <a href="https://github.com/sashahilton00/spotify-connect-resources/raw/master/libs/armhf/armv7/release-esdk-1.20.0-v1.20.0-g594175d4/libspotify_embedded_shared.so">this one</a>
 3. Get your spotify key, <a href="https://devaccount.spotify.com/my-account/keys/" target="_blank">here</a>, download the binary version
 4. Get SCPlayer jar, <a href="https://github.com/crsmoro/scplayer/raw/master/SCPlayer.jar">here</a>
 5. Put all on the same folder

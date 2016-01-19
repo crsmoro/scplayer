@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class SpSampleFormat extends Structure {
 	public short channels;
+	/** SpSampleType */
 	public short sample_type;
 	public int sample_rate;
 	public SpSampleFormat() {
@@ -18,6 +19,7 @@ public class SpSampleFormat extends Structure {
 	protected List<? > getFieldOrder() {
 		return Arrays.asList("channels", "sample_type", "sample_rate");
 	}
+	/** @param sample_type SpSampleType */
 	public SpSampleFormat(short channels, short sample_type, int sample_rate) {
 		super();
 		this.channels = channels;

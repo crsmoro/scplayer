@@ -1,6 +1,5 @@
 package com.shuffle.scplayer.jna;
 import com.sun.jna.Callback;
-import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import java.util.Arrays;
@@ -14,18 +13,23 @@ public class SpConfig extends Structure {
 	public int version;
 	/** C type : uint8_t* */
 	public Pointer buffer;
-	public NativeLong buffer_size;
+	/** 0x100000 */
+	public int buffer_size;
 	/** C type : uint8_t* */
 	public Pointer app_key;
-	public NativeLong app_key_size;
-	/** C type : char* */
+	public int app_key_size;
+	/** C type : const char* */
 	public Pointer deviceId;
-	/** C type : char* */
+	/** C type : const char* */
 	public Pointer remoteName;
-	/** C type : char* */
+	/** C type : const char* */
 	public Pointer brandName;
-	/** C type : char* */
+	/** C type : const char* */
 	public Pointer modelName;
+	/** C type : char* */
+	public Pointer client_id;
+	/** C type : char* */
+	public Pointer client_secret;
 	public int deviceType;
 	/** C type : error_callback_callback* */
 	public SpConfig.error_callback_callback error_callback;
@@ -38,7 +42,7 @@ public class SpConfig extends Structure {
 		super();
 	}
 	protected List<? > getFieldOrder() {
-		return Arrays.asList("version", "buffer", "buffer_size", "app_key", "app_key_size", "deviceId", "remoteName", "brandName", "modelName", "deviceType", "error_callback", "userdata");
+		return Arrays.asList("version", "buffer", "buffer_size", "app_key", "app_key_size", "deviceId", "remoteName", "brandName", "modelName", "client_id", "client_secret", "deviceType", "error_callback", "userdata");
 	}
 	public SpConfig(Pointer peer) {
 		super(peer);
