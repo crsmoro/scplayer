@@ -13,13 +13,20 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 
-import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfVars;
-import com.shuffle.scplayer.jna.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
+import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfVars;
+import com.shuffle.scplayer.jna.SpConfig;
+import com.shuffle.scplayer.jna.SpConnectionCallbacks;
+import com.shuffle.scplayer.jna.SpDebugCallbacks;
+import com.shuffle.scplayer.jna.SpMetadata;
+import com.shuffle.scplayer.jna.SpPlaybackCallbacks;
+import com.shuffle.scplayer.jna.SpSampleFormat;
+import com.shuffle.scplayer.jna.SpZeroConfVars;
+import com.shuffle.scplayer.jna.SpotifyLibrary;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpConnectionNotify;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpDeviceType;
@@ -29,14 +36,9 @@ import com.shuffle.scplayer.jna.SpotifyLibrary.SpPlaybackNotify;
 import com.shuffle.scplayer.utils.NativeUtils;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
-import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-/**
- * @author crsmoro
- * @author LeanderK
- */
 public class SpotifyConnectPlayerImpl implements SpotifyConnectPlayer {
 
 	private static final transient Log log = LogFactory.getLog(SpotifyConnectPlayerImpl.class);

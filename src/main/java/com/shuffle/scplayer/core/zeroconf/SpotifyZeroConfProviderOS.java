@@ -1,14 +1,5 @@
 package com.shuffle.scplayer.core.zeroconf;
 
-import com.shuffle.scplayer.core.SpotifyConnectPlayer;
-import com.shuffle.scplayer.jna.SpotifyLibrary;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.crypto.Cipher;
-import javax.crypto.Mac;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.MessageDigest;
@@ -16,12 +7,19 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.shuffle.scplayer.core.SpotifyConnectPlayer;
+import com.shuffle.scplayer.jna.SpotifyLibrary;
+
 /* Spotify zeroconf vars and login provider based on open source implementation (code based on libRespot) */
 public class SpotifyZeroConfProviderOS implements SpotifyZeroConfProvider {
 
     private final SpotifyConnectPlayer player;
 
-    private static final transient Log log = LogFactory.getLog(SpotifyZeroConfProviderOS.class);
     BigInteger publicKey, privateKey;
     // pregenerated prime that client is aware of for DH key exchange
     // IMO java should have unsigned types
