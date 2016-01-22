@@ -35,6 +35,7 @@ Java options -D&lt;option&gt;=&lt;value&gt;
 * list.mixers - List the available mixers for use<br/>
 * mixer - Set the mixer, you can use either the name or index provided by list.mixers<br/>
 * bitrate - Set the bitrate (90/160/320)
+* zeroconf - Zeroconf authentication (library/opensource) - library is the default / opensource uses avahi-publish
 
 Example: `./jdk1.8.0_60/bin/java -Dplayer.name=Kitchen -Dmixer=0 -Dapp.key=/home/pi/spotify_appkey.key -jar SCPlayer.jar`
 
