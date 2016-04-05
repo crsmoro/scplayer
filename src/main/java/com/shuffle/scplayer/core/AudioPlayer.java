@@ -59,7 +59,7 @@ public class AudioPlayer implements AudioListener {
         	else {
         		audioLine = AudioSystem.getSourceDataLine(PCM);
         	}
-            audioLine.open(PCM);
+            audioLine.open(PCM, 1048576);
             onVolumeChanged(player.getVolume());
             if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))
                 ((BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE)).setValue(true);
