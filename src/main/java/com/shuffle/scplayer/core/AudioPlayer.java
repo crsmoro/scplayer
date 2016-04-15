@@ -106,7 +106,7 @@ public class AudioPlayer implements AudioListener {
             }
             int toWrite = Math.min(audioLine.available(), data.length);
             if (toWrite == audioLine.available())
-                System.out.println("full! toWrite: " + toWrite + " instead of: " + data.length);
+                log.trace("full! toWrite: " + toWrite + " instead of: " + data.length);
             return audioLine.write(data, 0, toWrite);
         } else {
             return 0;
