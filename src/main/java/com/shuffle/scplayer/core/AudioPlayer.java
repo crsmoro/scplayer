@@ -48,7 +48,7 @@ public class AudioPlayer implements AudioListener {
 
     @Override
     public void onActive() {
-        if (audioLine != null && audioLine.isOpen())
+        if (audioLine != null)
             audioLine.close();
 
         try {
@@ -59,7 +59,7 @@ public class AudioPlayer implements AudioListener {
         	else {
         		audioLine = AudioSystem.getSourceDataLine(PCM);
         	}
-            audioLine.open(PCM);
+            audioLine.open(PCM, 1048576);
             onVolumeChanged(player.getVolume());
             if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))
                 ((BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE)).setValue(true);
@@ -73,6 +73,7 @@ public class AudioPlayer implements AudioListener {
         if (audioLine != null) {
             audioLine.flush();
             audioLine.close();
+            audioLine = null;
         }
     }
 
@@ -104,6 +105,8 @@ public class AudioPlayer implements AudioListener {
                 audioLine.start();
             }
             int toWrite = Math.min(audioLine.available(), data.length);
+            if (toWrite == audioLine.available())
+                System.out.println("full! toWrite: " + toWrite + " instead of: " + data.length);
             return audioLine.write(data, 0, toWrite);
         } else {
             return 0;

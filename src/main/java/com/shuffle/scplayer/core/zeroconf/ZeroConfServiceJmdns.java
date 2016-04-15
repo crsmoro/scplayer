@@ -11,7 +11,8 @@ public class ZeroConfServiceJmdns implements ZeroConfService {
 
         try {
             JmDNS jmDNS = JmDNS.create();
-            jmDNS.registerService(ServiceInfo.create(type, name, port, 0, 0, values));
+            String fullyQualitifed = type + ".local.";
+            jmDNS.registerService(ServiceInfo.create(fullyQualitifed, name, port, 0, 0, values));
         } catch (IOException e) {
             e.printStackTrace();
         }
