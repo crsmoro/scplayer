@@ -12,7 +12,6 @@ import java.util.UUID;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 
-import com.shuffle.scplayer.core.zeroconf.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -32,6 +31,11 @@ import com.shuffle.scplayer.core.PlayerListener;
 import com.shuffle.scplayer.core.SpotifyConnectPlayer;
 import com.shuffle.scplayer.core.SpotifyConnectPlayerImpl;
 import com.shuffle.scplayer.core.Track;
+import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfProviderFactory;
+import com.shuffle.scplayer.core.zeroconf.SpotifyZeroConfServer;
+import com.shuffle.scplayer.core.zeroconf.ZeroConfService;
+import com.shuffle.scplayer.core.zeroconf.ZeroConfServiceAvahiBin;
+import com.shuffle.scplayer.core.zeroconf.ZeroConfServiceJmdns;
 import com.shuffle.scplayer.jna.SpotifyLibrary.SpBitrate;
 import com.shuffle.scplayer.web.PlayerWebServerIntegration;
 
@@ -243,10 +247,25 @@ public class SCPlayerMain {
 		player.setPlayerName(playerName);
 
 		// starting zeroconf service
-		String zeroConfImpl = System.getProperty("zeroconf","library");
-		ZeroConfService zeroConfService = new ZeroConfServiceAvahiBin();
+		String zeroConfProvider = System.getProperty("zeroconf.provider","opensource");
+		String zeroConfServiceProp = System.getProperty("zeroconf.service","avahi");
+		ZeroConfService zeroConfService = null;
+		if (zeroConfServiceProp.equals("jmdns")) {
+			zeroConfService = new ZeroConfServiceJmdns();
+		}
+		else if (zeroConfServiceProp.equals("avahi")) {
+			try {
+        		    Runtime.getRuntime().exec("avahi-publish -h");
+        		    zeroConfService = new ZeroConfServiceAvahiBin();
+        		} catch (Exception e) {
+        		    log.warn("avahi-publish not found, using native jmdns");
+        		}
+		}
+		if (zeroConfService == null) {
+			zeroConfService = new ZeroConfServiceJmdns();
+		}
 		SpotifyZeroConfProviderFactory providerFactory = new SpotifyZeroConfProviderFactory();
-		SpotifyZeroConfServer zeroConf = new SpotifyZeroConfServer(providerFactory.create(zeroConfImpl, player), zeroConfService);
+		SpotifyZeroConfServer zeroConf = new SpotifyZeroConfServer(providerFactory.create(zeroConfProvider, player), zeroConfService);
 		zeroConf.runServer();
 
 		String mixerString = System.getProperty("mixer", "0");
@@ -265,7 +284,6 @@ public class SCPlayerMain {
 			}
 			player.setMixer(mixer);
 		}
-
 	}
 
 	private static void verifyCredentialFile(File credentials) throws IOException, IllegalArgumentException {

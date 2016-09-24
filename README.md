@@ -34,8 +34,9 @@ Java options -D&lt;option&gt;=&lt;value&gt;
 * app.key - Path to your spotify_appkey.key<br/>
 * list.mixers - List the available mixers for use<br/>
 * mixer - Set the mixer, you can use either the name or index provided by list.mixers<br/>
-* bitrate - Set the bitrate (90/160/320)
-* zeroconf - Zeroconf authentication (library/opensource) - uses avahi-publish
+* bitrate - Set the bitrate (90/160/320)<br/>
+* zeroconf.provider - Zeroconf authentication provider (library/opensource), defaults to opensource<br/>
+* zeroconf.service - Zeroconf authentication service (avahi/jmdns), defaults to avahi, if not found uses JmDNS (May not work on Windows clients)
 
 Example: `./jdk1.8.0_60/bin/java -Dplayer.name=Kitchen -Dmixer=0 -Dapp.key=/home/pi/spotify_appkey.key -jar SCPlayer.jar`
 
