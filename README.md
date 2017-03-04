@@ -40,6 +40,10 @@ Java options -D&lt;option&gt;=&lt;value&gt;
 
 Example: `./jdk1.8.0_60/bin/java -Dplayer.name=Kitchen -Dmixer=0 -Dapp.key=/home/pi/spotify_appkey.key -jar SCPlayer.jar`
 
+Use as a Service
+----------------
+Details <a href="service">here</a>
+
 Troubleshooting
 ----------------
 

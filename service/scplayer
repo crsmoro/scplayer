@@ -1,0 +1,31 @@
+### BEGIN INIT INFO
+# Provides:          scplayer
+# Required-Start:    alsa-utils $local_fs $network
+# Required-Stop:     alsa-utils $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: scplayer
+# Description:       spotify connect player
+### END INIT INFO
+case "$1" in
+start)
+
+echo "Starting scplayer"
+
+# Specify working directory
+cd /scplayer
+
+# Specify the process/command to start, e.g.
+java -Dplayer.name=Salon -jar SCPlayer.jar > /scplayer/scplayer.log
+
+;;
+stop)
+echo "Stopping scplayer"
+;;
+*)
+echo "Usage: /etc/init.d/scplayer {start|stop}"
+exit 1
+;;
+esac
+
+exit 0

@@ -1,0 +1,11 @@
+[Unit]
+Description=Spotify Connect Player
+After=network.target
+
+[Service]
+ExecStartPre=cd /home/pi/scplayer
+ExecStart=/usr/bin/java -Ddebug=0 -Dstandalone=true -Dplayer.name=SCPlayer -Dbitrate=320 -Dusername=XXXXXX -Dpassword=XXXXXX -Dapp.key=./spotify_appkey.key -jar SCPlayer.jar
+WorkingDirectory=/home/pi/scplayer
+
+[Install]
+WantedBy=multi-user.target
