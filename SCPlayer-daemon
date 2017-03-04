@@ -1,0 +1,93 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          SCPlayer
+# Required-Start:    $local_fs $network $named $time $syslog
+# Required-Stop:     $local_fs $network $named $time $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       SCPlayer
+### END INIT INFO
+
+# /etc/init.d Service SCPlayer, sam
+# Installation:
+#  REQUIREMENT: put all the files in one working dir. In my case i used /home/pi/Downloads/
+#   1) If any commands need to run before executing SCPlayer (like loading a
+#      virutal environment), put them in PRE_EXEC. This command must end with
+#      a semicolon.
+#   2) Set RUN_AS to the username that should be used to execute SCPlayer.
+#   3) Copy this script to /etc/init.d/
+#       sudo cp SCPlayer-daemon /etc/init.d/SCPlayer-daemon
+#       sudo chmod +x /etc/init.d/SCPlayer-daemon
+#   4) Register the daemon with Linux
+#       sudo update-rc.d SCPlayer-daemon defaults
+#   5) Install this service
+#       sudo service SCPlayer-daemon install
+#   6) Restart Machine
+# After installation, SCPlayer should start automatically.
+
+PRE_EXEC=""
+RUN_AS="pi"
+PID_FILE="/home/pi/Downloads/SCPlayer.pid"
+
+start() {
+  if [ -f $PID_FILE ] && kill -0 $(cat $PID_FILE) 2> /dev/null; then
+    echo 'Service already running' >&2
+    return 1
+  fi
+  echo 'Starting service…' >&2
+  local CMD="(cd /home/pi/Downloads; java -jar /home/pi/Downloads/SCPlayer.jar);"
+  su -c "$CMD" $RUN_AS
+  echo 'Service started' >&2
+}
+
+stop() {
+    if [ ! -f "$PID_FILE" ] || ! kill -0 $(cat "$PID_FILE") 2> /dev/null; then
+    echo 'Service not running' >&2
+    return 1
+  fi
+  echo 'Stopping service…' >&2
+  kill $(cat "$PID_FILE")
+  while ps -p $(cat "$PID_FILE") > /dev/null 2>&1; do sleep 1;done;
+  echo 'Service stopped' >&2
+}
+
+install() {
+    echo "Installing SCPLayer"
+    echo "999998" > $PID_FILE
+    chown $RUN_AS $PID_FILE
+    chown $RUN_AS $CONFIG_DIR
+}
+
+uninstall() {
+  echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
+  local SURE
+  read SURE
+  if [ "$SURE" = "yes" ]; then
+    stop
+    rm -fv "$PID_FILE"
+	update-rc.d -f SCPLayer-daemon remove
+    rm -fv "$0"
+    echo "SCPlayer has been removed. SCPlayer is still installed."
+  fi
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  install)
+    install
+    ;;
+  uninstall)
+    uninstall
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|install|uninstall}"
+esac
