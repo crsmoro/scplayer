@@ -23,7 +23,7 @@ public interface PlayerListener {
 
     void onTokenLost();
 
-    void onVolumeChanged(short volume);
+    void onVolumeChanged(int volume);
     
     void onPlayerNameChanged(String playerName);
 }

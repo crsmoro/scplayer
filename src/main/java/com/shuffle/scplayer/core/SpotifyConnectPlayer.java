@@ -11,7 +11,7 @@ public interface SpotifyConnectPlayer {
 
     boolean getRepeat();
 
-    short getVolume();
+    int getVolume();
 
     int getSeek();
 
@@ -37,7 +37,7 @@ public interface SpotifyConnectPlayer {
 
     void repeat(boolean enabled);
 
-    void volume(short volume);
+    void volume(int volume);
 
     void login(String username, String password);
 

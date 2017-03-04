@@ -29,7 +29,7 @@ public class SpPlaybackCallbacks extends Structure {
 		void apply(int millis, Pointer userdata);
 	};
 	public interface apply_volume_callback extends Callback {
-		void apply(short volume, Pointer userdata);
+		void apply(int volume, Pointer userdata);
 	};
 	public SpPlaybackCallbacks() {
 		super();

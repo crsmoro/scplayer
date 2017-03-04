@@ -60,6 +60,7 @@ public class AudioPlayer implements AudioListener {
         		audioLine = AudioSystem.getSourceDataLine(PCM);
         	}
             audioLine.open(PCM, 1048576);
+            log.debug("player.volume : " + player.getVolume());
             onVolumeChanged(player.getVolume());
             if (isMuted && audioLine.isControlSupported(BooleanControl.Type.MUTE))
                 ((BooleanControl) audioLine.getControl(BooleanControl.Type.MUTE)).setValue(true);
@@ -114,7 +115,7 @@ public class AudioPlayer implements AudioListener {
     }
 
     @Override
-    public void onVolumeChanged(short volume) {
+    public void onVolumeChanged(int volume) {
         log.info("apply_volume_callback");
         log.debug("volume: " + volume);
         if (audioLine == null)

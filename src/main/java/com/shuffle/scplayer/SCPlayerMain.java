@@ -50,6 +50,7 @@ public class SCPlayerMain {
 	private static String blob;
 	private static String playerName;
 	private static String deviceId = UUID.randomUUID().toString();
+	private static int volume;
 
 	private static boolean rememberMe;
 	private static JsonObject credentialsJson; 
@@ -79,6 +80,7 @@ public class SCPlayerMain {
 		playerName = System.getProperty("player.name", (playerName != null ? playerName : "SCPlayer"));
 		username = System.getProperty("username", (username != null ? username:null));
 		password = System.getProperty("password", (password != null ? password:null));
+		volume = Integer.getInteger("volume", (volume != 0 ? volume:32767));
 		int bitrate = Integer.getInteger("bitrate", SpBitrate.kSpBitrate320k);
 		
 		File appKey = new File(appKeyLocation);
@@ -117,6 +119,7 @@ public class SCPlayerMain {
 					credentialsJson.addProperty("blob", blob);
 					credentialsJson.addProperty("playerName", player.getPlayerName());
 					credentialsJson.addProperty("deviceId", player.getDeviceId());
+					credentialsJson.addProperty("volume", player.getVolume());
 					try {
 						if (!credentials.exists()) {
 							log.debug("Credentials file not exists");
@@ -150,8 +153,23 @@ public class SCPlayerMain {
 		player.addPlayerListener(new PlayerListener() {
 			
 			@Override
-			public void onVolumeChanged(short volume) {
-				
+			public void onVolumeChanged(int volume) {
+				log.trace("remember : " + rememberMe);
+				if (rememberMe) {
+					try {
+						if (credentialsJson == null) {
+							log.debug("Credentials file not exists");
+							return;
+						}
+						credentialsJson.remove("volume");
+						credentialsJson.addProperty("volume", volume);
+						FileWriter fileWriter = new FileWriter(credentials);
+						fileWriter.write(gson.toJson(credentialsJson));
+						fileWriter.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 			
 			@Override
@@ -245,6 +263,7 @@ public class SCPlayerMain {
 		}
 
 		player.setPlayerName(playerName);
+		
 
 		// starting zeroconf service
 		String zeroConfProvider = System.getProperty("zeroconf.provider","opensource");
@@ -284,6 +303,8 @@ public class SCPlayerMain {
 			}
 			player.setMixer(mixer);
 		}
+		
+		player.volume(volume);
 	}
 
 	private static void verifyCredentialFile(File credentials) throws IOException, IllegalArgumentException {
@@ -307,6 +328,10 @@ public class SCPlayerMain {
 					log.trace("PlayerName : " + playerName);
 					deviceId = credentialsJson.get("deviceId").getAsString();
 					log.trace("deviceId : " + deviceId);
+					if (credentialsJson.get("volume") != null) {
+						volume = credentialsJson.get("volume").getAsInt();						
+						log.trace("volume : " + volume);
+					}
 				}
 			}
 		} catch (FileNotFoundException e) {

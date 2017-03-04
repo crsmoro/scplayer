@@ -32,7 +32,7 @@ public interface AudioListener {
 
     int onAudioData(byte[] data);
 
-    void onVolumeChanged(short volume);
+    void onVolumeChanged(int volume);
 
     void close();
 }
